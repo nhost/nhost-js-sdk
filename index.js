@@ -1,10 +1,34 @@
 import axios from 'axios';
 
-class hbp {
+export default class hbp {
   constructor(config) {
     this.endpoint = config.endpoint;
   }
 
+  async register(username, password) {
+
+    const data = {
+      username,
+      password
+    };
+
+    let res;
+    try {
+      res = await axios(`${this.endpoint}/auth/register`, {
+        method: 'post',
+        data: {
+          email: username,
+          password,
+        },
+        withCredentials: true,
+      });
+    } catch (e) {
+      throw e.response;
+    }
+  }
+
+
+  // Storage Upload
   async upload(path, files, onUploadProgress = false) {
 
     let form_data = new FormData();
