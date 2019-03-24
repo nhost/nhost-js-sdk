@@ -1,5 +1,19 @@
 # hbp-js-sdk
 
+# WIP
+
+## Auth
+
+[ ] register
+[ ] activate account
+[ ] sign in
+[ ] implement refetch token strategy
+[ ] new password
+
+## Storage
+
+[x] Upload
+[x] Download
 
 ## usage
 
