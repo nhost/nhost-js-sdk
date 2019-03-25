@@ -7,14 +7,8 @@ export default class hbp {
 
   async register(username, password) {
 
-    const data = {
-      username,
-      password
-    };
-
-    let res;
     try {
-      res = await axios(`${this.endpoint}/auth/register`, {
+      const req = await axios(`${this.endpoint}/auth/register`, {
         method: 'post',
         data: {
           email: username,
@@ -22,6 +16,28 @@ export default class hbp {
         },
         withCredentials: true,
       });
+
+      return req.data;
+
+    } catch (e) {
+      throw e.response;
+    }
+  }
+
+  async sign_in(username, password) {
+
+    try {
+      const req = await axios(`${this.endpoint}/auth/sign-in`, {
+        method: 'post',
+        data: {
+          email: username,
+          password,
+        },
+        withCredentials: true,
+      });
+
+      return req.data;
+
     } catch (e) {
       throw e.response;
     }
