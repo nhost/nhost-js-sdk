@@ -12,9 +12,9 @@
 
 ## Storage
 
-[x] Upload
+- [x] Upload
 
-[x] Download
+- [x] Download
 
 ## usage
 
