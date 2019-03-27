@@ -11,7 +11,7 @@ export default class hbp {
       const req = await axios(`${this.endpoint}/auth/register`, {
         method: 'post',
         data: {
-          email: username,
+          username,
           password,
         },
         withCredentials: true,
@@ -30,7 +30,7 @@ export default class hbp {
       const req = await axios(`${this.endpoint}/auth/sign-in`, {
         method: 'post',
         data: {
-          email: username,
+          username,
           password,
         },
         withCredentials: true,
