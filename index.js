@@ -24,10 +24,10 @@ export default class hbp {
     }
   }
 
-  async sign_in(username, password) {
+  async login(username, password) {
 
     try {
-      const req = await axios(`${this.endpoint}/auth/sign-in`, {
+      const req = await axios(`${this.endpoint}/auth/login`, {
         method: 'post',
         data: {
           username,
