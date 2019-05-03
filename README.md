@@ -35,5 +35,10 @@ await nhost.register(username, password);
 
 ```
 const res = await nhost.upload(path, files, onUploadProgress);
+```
+
+
+#### Get full URL of file
+```
 const url = nhost.url(file_key);
 ```

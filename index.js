@@ -83,10 +83,6 @@ export default class nhost {
 
   async new_password(secret_token, password) {
 
-    console.log('new password..')
-    console.log(secret_token)
-    console.log(password)
-
     try {
       const req = await axios(`${this.endpoint}/auth/new-password`, {
         method: 'post',
