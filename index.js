@@ -45,7 +45,6 @@ export default class nhost {
 
   async refetch_token(user_id, refetch_token) {
 
-    console.log('ok')
     try {
       const req = await axios(`${this.endpoint}/auth/refetch-token`, {
         method: 'post',
@@ -64,7 +63,49 @@ export default class nhost {
   }
 
 
-  // Storage Upload
+  async activate_account(secret_token) {
+
+    try {
+      const req = await axios(`${this.endpoint}/auth/activate-account`, {
+        method: 'post',
+        data: {
+          secret_token,
+        },
+        withCredentials: true,
+      });
+
+      return req.data;
+
+    } catch (e) {
+      throw e.response;
+    }
+  }
+
+  async new_password(secret_token, password) {
+
+    console.log('new password..')
+    console.log(secret_token)
+    console.log(password)
+
+    try {
+      const req = await axios(`${this.endpoint}/auth/new-password`, {
+        method: 'post',
+        data: {
+          secret_token,
+          password,
+        },
+        withCredentials: true,
+      });
+
+      return req.data;
+
+    } catch (e) {
+      throw e.response;
+    }
+  }
+
+
+  // upload file
   async upload(path, files, onUploadProgress = false) {
 
     let form_data = new FormData();
@@ -85,6 +126,7 @@ export default class nhost {
     return upload_res.data;
   }
 
+  // get file url
   url(path) {
     return `${this.endpoint}/storage/file/${path}`;
   }

@@ -1,14 +1,12 @@
 # nhost-js-sdk
 
-# WIP
-
 ## Auth
 
-- [ ] register
-- [ ] activate account
-- [ ] sign in
-- [ ] implement refetch token strategy
-- [ ] new password
+- [x] register
+- [x] activate account
+- [x] sign in
+- [x] implement refetch token strategy
+- [x] new password
 
 ## Storage
 
@@ -25,7 +23,15 @@ const config = {
 const nhost = new nhost(config);
 ```
 
-### examples
+### Examples
+
+#### Register user
+
+```
+await nhost.register(username, password);
+```
+
+#### Upload files
 
 ```
 const res = await nhost.upload(path, files, onUploadProgress);
