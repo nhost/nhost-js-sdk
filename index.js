@@ -43,6 +43,26 @@ export default class nhost {
     }
   }
 
+  async refetch_token(user_id, refetch_token) {
+
+    console.log('ok')
+    try {
+      const req = await axios(`${this.endpoint}/auth/refetch-token`, {
+        method: 'post',
+        data: {
+          user_id,
+          refetch_token,
+        },
+        withCredentials: true,
+      });
+
+      return req.data;
+
+    } catch (e) {
+      throw e.response;
+    }
+  }
+
 
   // Storage Upload
   async upload(path, files, onUploadProgress = false) {
