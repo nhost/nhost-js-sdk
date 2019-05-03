@@ -1,5 +1,5 @@
 {
-  "name": "hbp-js-sdk",
+  "name": "nhost-js-sdk",
   "version": "0.0.4",
   "description": "",
   "main": "index.js",
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nhost/hbp-js-sdk.git"
+    "url": "git+https://github.com/nhost/nhost-js-sdk.git"
   },
   "author": "Johan Eliasson",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/nhost/hbp-js-sdk/issues"
+    "url": "https://github.com/nhost/nhost-js-sdk/issues"
   },
-  "homepage": "https://github.com/nhost/hbp-js-sdk#readme",
+  "homepage": "https://github.com/nhost/nhost-js-sdk#readme",
   "dependencies": {
     "axios": "^0.18.0"
   }

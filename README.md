@@ -1,4 +1,4 @@
-# hbp-js-sdk
+# nhost-js-sdk
 
 # WIP
 
@@ -13,7 +13,6 @@
 ## Storage
 
 - [x] Upload
-
 - [x] Download
 
 ## usage
@@ -23,12 +22,12 @@ const config = {
   endpoint: 'http://localhost:8083',
 };
 
-const hbp = new hbp(config);
+const nhost = new nhost(config);
 ```
 
 ### examples
 
 ```
-const res = await hbp.upload(path, files, onUploadProgress);
-const url = hbp.url(file_key);
+const res = await nhost.upload(path, files, onUploadProgress);
+const url = nhost.url(file_key);
 ```

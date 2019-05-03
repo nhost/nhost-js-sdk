@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export default class hbp {
+export default class nhost {
   constructor(config) {
     this.endpoint = config.endpoint;
   }
