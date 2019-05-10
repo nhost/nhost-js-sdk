@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/nhost/nhost-js-sdk#readme",
   "dependencies": {
-    "axios": "^0.18.0"
+    "axios": "^0.18.0",
+    "jsonwebtoken": "^8.5.1"
   }
 }

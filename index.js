@@ -1,14 +1,76 @@
+import jwt from 'jsonwebtoken';
 import axios from 'axios';
 
 export default class nhost {
   constructor(config) {
     this.endpoint = config.endpoint;
+    this.jwt_token = '';
+
+    this.interval = null;
+  }
+
+  initSession(data) {
+    this.setSession(data);
+    this.startRefetchTokenInterval();
+  }
+
+  setSession(data) {
+    const {
+      jwt_token,
+      refetch_token,
+      user_id,
+    } = data;
+
+    var claims = jwt.decode(jwt_token);
+
+    localStorage.clear();
+    localStorage.setItem('refetch_token', refetch_token);
+    localStorage.setItem('user_id', user_id);
+
+
+    sessionStorage.clear();
+    sessionStorage.setItem('jwt_token', jwt_token);
+    sessionStorage.setItem('user_id', user_id);
+    sessionStorage.setItem('exp', (parseInt(claims.exp, 10) * 1000));
+  }
+
+  startRefetchTokenInterval() {
+    this.interval = setInterval(this.refetchToken, 60000);
+  }
+
+  stopRefetchTokenInterval() {
+    clearInterval(this.interval);
+  }
+
+  async refetchToken() {
+
+    const user_id = localStorage.getItem('user_id');
+    const refetch_token = localStorage.getItem('refetch_token');
+
+    if (!user_id || !refetch_token) {
+      return;
+    }
+
+    try {
+      const data = await this.refetch_token(user_id, refetch_token);
+      this.setSession(data);
+    } catch (e) {
+      console.error('error fetching new token using refetch token');
+      console.error({e});
+      this.logout();
+    }
+  }
+
+
+  async isAuthenticated() {
+    return new Date().getTime() < sessionStorage.getItem('exp');
   }
 
   async register(username, password) {
 
+    let req;
     try {
-      const req = await axios(`${this.endpoint}/auth/register`, {
+      req = await axios(`${this.endpoint}/auth/register`, {
         method: 'post',
         data: {
           username,
@@ -16,15 +78,18 @@ export default class nhost {
         },
         withCredentials: true,
       });
-
-      return req.data;
-
     } catch (e) {
       throw e.response;
     }
+
+    this.initSession(req.data);
+
+    return req.data;
   }
 
   async login(username, password) {
+
+    let data;
 
     try {
       const req = await axios(`${this.endpoint}/auth/login`, {
@@ -36,11 +101,19 @@ export default class nhost {
         withCredentials: true,
       });
 
-      return req.data;
+      data = req.data;
 
     } catch (e) {
       throw e.response;
     }
+
+    this.initSession(data);
+  }
+
+  logout() {
+    sessionStorage.clear();
+    localStorage.clear();
+    this.stopRefetchTokenInterval();
   }
 
   async refetch_token(user_id, refetch_token) {
