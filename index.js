@@ -4,7 +4,7 @@ import axios from 'axios';
 export default class nhost {
   constructor(config) {
     this.endpoint = config.endpoint;
-    this.jwt_token = '';
+    this.claims= null;
 
     this.interval = null;
   }
@@ -27,11 +27,16 @@ export default class nhost {
     localStorage.setItem('refetch_token', refetch_token);
     localStorage.setItem('user_id', user_id);
 
+    this.claims = claims;
 
     sessionStorage.clear();
     sessionStorage.setItem('jwt_token', jwt_token);
     sessionStorage.setItem('user_id', user_id);
     sessionStorage.setItem('exp', (parseInt(claims.exp, 10) * 1000));
+  }
+
+  getClaims() {
+    return this.claims;
   }
 
   startRefetchTokenInterval() {
