@@ -6,7 +6,7 @@ export default class nhost {
     this.endpoint = config.endpoint;
     this.claims= null;
 
-    this.logged_in = false;
+    this.logged_in = null;
 
     this.auth_state_change_function = null;
 
@@ -16,6 +16,7 @@ export default class nhost {
   }
 
   onAuthStateChanged(f) {
+    // set custom onAuthStateChange function
     this.auth_state_change_function = f;
   }
 
@@ -91,8 +92,7 @@ export default class nhost {
 
 
   isAuthenticated() {
-    const is_authenticated = new Date().getTime() < sessionStorage.getItem('exp');
-    return is_authenticated;
+    return this.logged_in;
   }
 
   async register(username, password) {
