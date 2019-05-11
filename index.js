@@ -6,7 +6,17 @@ export default class nhost {
     this.endpoint = config.endpoint;
     this.claims= null;
 
+    this.logged_in = false;
+
+    this.auth_state_change_function = null;
+
     this.interval = null;
+
+    this.refetchToken = this.refetchToken.bind(this);
+  }
+
+  onAuthStateChanged(f) {
+    this.auth_state_change_function = f;
   }
 
   initSession(data) {
@@ -33,14 +43,27 @@ export default class nhost {
     sessionStorage.setItem('jwt_token', jwt_token);
     sessionStorage.setItem('user_id', user_id);
     sessionStorage.setItem('exp', (parseInt(claims.exp, 10) * 1000));
+
+    if (!this.logged_in) {
+      if (typeof this.auth_state_change_function === 'function') {
+        this.auth_state_change_function('login');
+      } else {
+        console.log('no auth state change function')
+      }
+      this.logged_in = true;
+    }
   }
 
   getClaims() {
     return this.claims;
   }
 
+  getJWTToken() {
+    return sessionStorage.getItem('jwt_token');
+  }
+
   startRefetchTokenInterval() {
-    this.interval = setInterval(this.refetchToken, 60000);
+    this.interval = setInterval(this.refetchToken, (60*1000));
   }
 
   stopRefetchTokenInterval() {
@@ -53,7 +76,7 @@ export default class nhost {
     const refetch_token = localStorage.getItem('refetch_token');
 
     if (!user_id || !refetch_token) {
-      return;
+      return this.logout();
     }
 
     try {
@@ -62,13 +85,14 @@ export default class nhost {
     } catch (e) {
       console.error('error fetching new token using refetch token');
       console.error({e});
-      this.logout();
+      return this.logout();
     }
   }
 
 
-  async isAuthenticated() {
-    return new Date().getTime() < sessionStorage.getItem('exp');
+  isAuthenticated() {
+    const is_authenticated = new Date().getTime() < sessionStorage.getItem('exp');
+    return is_authenticated;
   }
 
   async register(username, password) {
@@ -116,9 +140,17 @@ export default class nhost {
   }
 
   logout() {
+    console.log('nhost logout')
     sessionStorage.clear();
     localStorage.clear();
     this.stopRefetchTokenInterval();
+
+    if (this.logged_in) {
+      this.logged_in = false;
+      if (typeof this.auth_state_change_function === 'function') {
+        this.auth_state_change_function(null);
+      }
+    }
   }
 
   async refetch_token(user_id, refetch_token) {
