@@ -13,6 +13,21 @@ export default class nhost {
     this.interval = null;
 
     this.refetchToken = this.refetchToken.bind(this);
+    this.autoLogin = this.autoLogin.bind(this);
+
+    this.autoLogin()
+  }
+
+  async autoLogin() {
+    // try refetch token.
+    const refetch_token_ok = await this.refetchToken();
+
+    if (!refetch_token_ok) {
+      // unable to login from refetch token
+      return false;
+    }
+
+    this.startRefetchTokenInterval();
   }
 
   onAuthStateChanged(f) {
@@ -46,12 +61,12 @@ export default class nhost {
     sessionStorage.setItem('exp', (parseInt(claims.exp, 10) * 1000));
 
     if (!this.logged_in) {
+      this.logged_in = true;
       if (typeof this.auth_state_change_function === 'function') {
-        this.auth_state_change_function('login');
+        this.auth_state_change_function(data);
       } else {
         console.log('no auth state change function')
       }
-      this.logged_in = true;
     }
   }
 
@@ -64,7 +79,7 @@ export default class nhost {
   }
 
   startRefetchTokenInterval() {
-    this.interval = setInterval(this.refetchToken, (60*1000));
+    this.interval = setInterval(this.refetchToken, (5*60*1000));
   }
 
   stopRefetchTokenInterval() {
@@ -83,6 +98,7 @@ export default class nhost {
     try {
       const data = await this.refetch_token(user_id, refetch_token);
       this.setSession(data);
+      return true;
     } catch (e) {
       console.error('error fetching new token using refetch token');
       console.error({e});
@@ -140,7 +156,6 @@ export default class nhost {
   }
 
   logout() {
-    console.log('nhost logout')
     sessionStorage.clear();
     localStorage.clear();
     this.stopRefetchTokenInterval();
@@ -151,6 +166,7 @@ export default class nhost {
         this.auth_state_change_function(null);
       }
     }
+    return false;
   }
 
   async refetch_token(user_id, refetch_token) {
