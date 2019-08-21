@@ -127,8 +127,6 @@ export default class nhost {
       throw e.response;
     }
 
-    this.initSession(req.data);
-
     return req.data;
   }
 
