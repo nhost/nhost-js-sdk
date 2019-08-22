@@ -111,7 +111,7 @@ export default class nhost {
     return this.logged_in;
   }
 
-  async register(username, password) {
+  async register(username, password, register_data = null) {
 
     let req;
     try {
@@ -120,6 +120,7 @@ export default class nhost {
         data: {
           username,
           password,
+          register_data,
         },
         withCredentials: true,
       });
