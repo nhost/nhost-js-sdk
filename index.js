@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import jwt_decode from 'jwt-decode';
 import axios from 'axios';
 
 export default class nhost {
@@ -47,7 +47,7 @@ export default class nhost {
       user_id,
     } = data;
 
-    var claims = jwt.decode(jwt_token);
+    var claims = jwt_decode(jwt_token);
 
     localStorage.clear();
     localStorage.setItem('refetch_token', refetch_token);
