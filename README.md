@@ -1,44 +1,102 @@
 # nhost-js-sdk
 
+Nhost js sdk to handle **Auth** and **Storage**.
+
+## Installation
+
+`npm install --save nhost-js-sdk`
+
+
+## Setup
+
+in ex `/src/nhost/index.js`:
+
+```
+import nhost from 'nhost-js-sdk';
+import { BACKEND_ENDPOINT } from '../config';
+
+const config = {
+  endpoint: 'https://backend-xxxxxx.nhost.io/'
+};
+
+export default new nhost(config);
+```
+
+
+## Usage across in your app
+
+`import nhost from '../nhost';`
+
+
 ## Auth
 
-- [x] register
-- [x] activate account
-- [x] sign in
-- [x] implement refetch token strategy
-- [x] new password
+### Register
+
+```
+try {
+  await nhost.register(username, password);
+} catch (e) {
+  // handle error
+}
+```
+
+### Login
+
+```
+try {
+  await nhost.login(username, password);
+} catch (e) {
+  // handle error
+}
+```
+
+### Logout
+
+```
+  nhost.logout();
+```
+
+
+### Activate account
+
+```
+try {
+  await nhost.activate_account(secret_token);
+} catch (e) {
+  // handle error
+}
+```
+
+
+### New password
+
+```
+try {
+  await nhost.new_password(secret_token, new_password);
+} catch (e) {
+  // handle error
+}
+```
 
 ## Storage
 
-- [x] Upload
-- [x] Download
-
-## usage
+### Upload file(s)
 
 ```
-const config = {
-  endpoint: 'http://localhost:8083',
-};
-
-const nhost = new nhost(config);
-```
-
-### Examples
-
-#### Register user
-
-```
-await nhost.register(username, password);
-```
-
-#### Upload files
-
-```
-const res = await nhost.upload(path, files, onUploadProgress);
+try {
+  await nhost.upload(path, files);
+} catch (e) {
+  // handle error
+}
 ```
 
 
-#### Get full URL of file
+### Get file url
+
 ```
-const url = nhost.url(file_key);
+try {
+  await nhost.url(file_path);
+} catch (e) {
+  // handle error
+}
 ```
