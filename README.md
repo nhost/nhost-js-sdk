@@ -56,6 +56,15 @@ try {
   nhost.logout();
 ```
 
+### onAuthStateChanged
+
+```
+nhost.onAuthStateChanged(data => {
+  console.log('auth state changed!');
+  console.log({data});
+});
+```
+
 
 ### Activate account
 

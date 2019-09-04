@@ -31,7 +31,7 @@ export default class nhost {
   }
 
   onAuthStateChanged(f) {
-    // set custom onAuthStateChange function
+    // set custom onAuthStateChanged function
     this.auth_state_change_function = f;
   }
 
