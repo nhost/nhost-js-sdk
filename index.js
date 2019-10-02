@@ -108,8 +108,6 @@ export default class nhost {
       this.setSession(data);
       return true;
     } catch (e) {
-      console.error('error fetching new token using refresh token');
-      console.error({e});
       return await this.logout();
     }
   }
