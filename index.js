@@ -15,9 +15,9 @@ export default class nhost {
     this.refetchToken = this.refetchToken.bind(this);
     this.autoLogin = this.autoLogin.bind(this);
 
-    // check what storage type:
-    if (config.storage_type === 'asyncStorage') {
-      this.storage = asyncStorage;
+    // use external storage?
+    if(config.storage) {
+      this.storage = config.storage
     } else {
       this.storage = localStorage;
     }
@@ -111,8 +111,6 @@ export default class nhost {
       this.setSession(data);
       return true;
     } catch (e) {
-      console.error('error fetching new token using refetch token');
-      console.error({e});
       return this.logout();
     }
   }
