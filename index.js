@@ -22,6 +22,12 @@ export default class nhost {
       this.storage = localStorage;
     }
 
+    this.inMemory = {
+      jwt_token: null,
+      user_id: null,
+      exp: null,
+    };
+
     this.autoLogin()
   }
 
@@ -55,17 +61,15 @@ export default class nhost {
     } = data;
 
     var claims = jwt_decode(jwt_token);
+    this.claims = claims;
 
     this.storage.clear();
     this.storage.setItem('refetch_token', refetch_token);
     this.storage.setItem('user_id', user_id);
 
-    this.claims = claims;
-
-    sessionStorage.clear();
-    sessionStorage.setItem('jwt_token', jwt_token);
-    sessionStorage.setItem('user_id', user_id);
-    sessionStorage.setItem('exp', (parseInt(claims.exp, 10) * 1000));
+    this.inMemory['jwt_token'] = jwt_token;
+    this.inMemory['user_id'] = user_id;
+    this.inMemory['exp'] = (parseInt(claims.exp, 10) * 1000);
 
     if (!this.logged_in) {
       this.logged_in = true;
@@ -82,7 +86,7 @@ export default class nhost {
   }
 
   getJWTToken() {
-    return sessionStorage.getItem('jwt_token');
+    return this.inMemory['jwt_token'];
   }
 
   startRefetchTokenInterval() {
@@ -162,7 +166,11 @@ export default class nhost {
   }
 
   logout() {
-    sessionStorage.clear();
+    this.inMemory = {
+      jwt_token: null,
+      user_id: null,
+      exp: null,
+    };
     this.storage.clear();
     this.stopRefetchTokenInterval();
 
