@@ -15,6 +15,13 @@ export default class nhost {
     this.refetchToken = this.refetchToken.bind(this);
     this.autoLogin = this.autoLogin.bind(this);
 
+    // check what storage type:
+    if (config.storage_type === 'asyncStorage') {
+      this.storage = asyncStorage;
+    } else {
+      this.storage = localStorage;
+    }
+
     this.autoLogin()
   }
 
@@ -49,9 +56,9 @@ export default class nhost {
 
     var claims = jwt_decode(jwt_token);
 
-    localStorage.clear();
-    localStorage.setItem('refetch_token', refetch_token);
-    localStorage.setItem('user_id', user_id);
+    this.storage.clear();
+    this.storage.setItem('refetch_token', refetch_token);
+    this.storage.setItem('user_id', user_id);
 
     this.claims = claims;
 
@@ -88,8 +95,8 @@ export default class nhost {
 
   async refetchToken() {
 
-    const user_id = localStorage.getItem('user_id');
-    const refetch_token = localStorage.getItem('refetch_token');
+    const user_id = this.storage.getItem('user_id');
+    const refetch_token = this.storage.getItem('refetch_token');
 
     if (!user_id || !refetch_token) {
       return this.logout();
@@ -156,7 +163,7 @@ export default class nhost {
 
   logout() {
     sessionStorage.clear();
-    localStorage.clear();
+    this.storage.clear();
     this.stopRefetchTokenInterval();
 
     if (this.logged_in) {
