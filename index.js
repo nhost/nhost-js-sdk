@@ -15,9 +15,18 @@ export default class nhost {
     this.refreshToken = this.refreshToken.bind(this);
     this.autoLogin = this.autoLogin.bind(this);
 
-    // memory store
-    this.store = {
+
+    // use external storage?
+    if(config.storage) {
+      this.storage = config.storage
+    } else {
+      this.storage = localStorage;
+    }
+
+    this.inMemory = {
       jwt_token: null,
+      user_id: null,
+      exp: null,
     };
 
     this.autoLogin()
@@ -71,9 +80,13 @@ export default class nhost {
 
     this.claims = claims;
 
-    this.store = {
-      jwt_token,
-    };
+    this.storage.clear();
+    this.storage.setItem('refetch_token', refetch_token);
+    this.storage.setItem('user_id', user_id);
+
+    this.inMemory['jwt_token'] = jwt_token;
+    this.inMemory['user_id'] = user_id;
+    this.inMemory['exp'] = (parseInt(claims.exp, 10) * 1000);
 
     if (!this.logged_in) {
       this.logged_in = true;
@@ -90,7 +103,7 @@ export default class nhost {
   }
 
   getJWTToken() {
-    return this.store.jwt_token;
+    return this.inMemory['jwt_token'];
   }
 
   startRefetchTokenInterval() {
@@ -101,7 +114,15 @@ export default class nhost {
     clearInterval(this.interval);
   }
 
-  async refreshToken() {
+
+  async refetchToken() {
+
+    const user_id = this.storage.getItem('user_id');
+    const refetch_token = this.storage.getItem('refetch_token');
+
+    if (!user_id || !refetch_token) {
+      return this.logout();
+    }
 
     try {
       const data = await this.refresh_token();
@@ -174,7 +195,12 @@ export default class nhost {
         withCredentials: true,
       });
     }
-    this.clearStore();
+    this.inMemory = {
+      jwt_token: null,
+      user_id: null,
+      exp: null,
+    };
+    this.storage.clear();
     this.stopRefetchTokenInterval();
 
     if (this.logged_in) {

@@ -109,3 +109,21 @@ try {
   // handle error
 }
 ```
+
+
+# React Native
+
+For React Native you can pass in `asyncStorage` for nhost to use instead of the default `localStorage`.
+
+```
+import nhost from 'nhost-js-sdk';
+import { AsyncStorage } from 'react-native';
+import { BACKEND_ENDPOINT } from '../config';
+
+const config = {
+  endpoint: 'https://backend-xxxxxx.nhost.io/'
+  storage: AsyncStorage
+};
+
+export default new nhost(config);
+```
