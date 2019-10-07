@@ -15,17 +15,8 @@ export default class nhost {
     this.refreshToken = this.refreshToken.bind(this);
     this.autoLogin = this.autoLogin.bind(this);
 
-
-    // use external storage?
-    if(config.storage) {
-      this.storage = config.storage
-    } else {
-      this.storage = localStorage;
-    }
-
     this.inMemory = {
       jwt_token: null,
-      user_id: null,
       exp: null,
     };
 
@@ -41,17 +32,20 @@ export default class nhost {
       return false;
     }
 
-    window.addEventListener('storage', () => this.syncLogout());
-    this.startRefetchTokenInterval();
+    window.addEventListener('storage', (event) => this.syncLogout(event));
+    this.startRefreshTokenInterval();
   }
 
-  async syncLogout() {
+  async syncLogout(event) {
+
+    if (event.key !== 'logout') return;
+
     const req = await axios(`${this.endpoint}/auth/logout`, {
       method: 'post',
       withCredentials: true,
     });
     this.clearStore();
-    this.stopRefetchTokenInterval();
+    this.stopRefreshTokenInterval();
 
     if (this.logged_in) {
       this.logged_in = false;
@@ -68,7 +62,7 @@ export default class nhost {
 
   initSession(data) {
     this.setSession(data);
-    this.startRefetchTokenInterval();
+    this.startRefreshTokenInterval();
   }
 
   setSession(data) {
@@ -80,12 +74,7 @@ export default class nhost {
 
     this.claims = claims;
 
-    this.storage.clear();
-    this.storage.setItem('refetch_token', refetch_token);
-    this.storage.setItem('user_id', user_id);
-
     this.inMemory['jwt_token'] = jwt_token;
-    this.inMemory['user_id'] = user_id;
     this.inMemory['exp'] = (parseInt(claims.exp, 10) * 1000);
 
     if (!this.logged_in) {
@@ -106,24 +95,16 @@ export default class nhost {
     return this.inMemory['jwt_token'];
   }
 
-  startRefetchTokenInterval() {
+  startRefreshTokenInterval() {
     this.interval = setInterval(this.refreshToken, (5*60*1000));
   }
 
-  stopRefetchTokenInterval() {
+  stopRefreshTokenInterval() {
     clearInterval(this.interval);
   }
 
 
-  async refetchToken() {
-
-    const user_id = this.storage.getItem('user_id');
-    const refetch_token = this.storage.getItem('refetch_token');
-
-    if (!user_id || !refetch_token) {
-      return this.logout();
-    }
-
+  async refreshToken() {
     try {
       const data = await this.refresh_token();
       this.setSession(data);
@@ -197,11 +178,9 @@ export default class nhost {
     }
     this.inMemory = {
       jwt_token: null,
-      user_id: null,
       exp: null,
     };
-    this.storage.clear();
-    this.stopRefetchTokenInterval();
+    this.stopRefreshTokenInterval();
 
     if (this.logged_in) {
       this.logged_in = false;
