@@ -12,19 +12,11 @@ export default class nhost {
 
     this.interval = null;
 
-    this.refetchToken = this.refetchToken.bind(this);
+    this.refreshToken = this.refreshToken.bind(this);
     this.autoLogin = this.autoLogin.bind(this);
-
-    // use external storage?
-    if(config.storage) {
-      this.storage = config.storage
-    } else {
-      this.storage = localStorage;
-    }
 
     this.inMemory = {
       jwt_token: null,
-      user_id: null,
       exp: null,
     };
 
@@ -32,15 +24,35 @@ export default class nhost {
   }
 
   async autoLogin() {
-    // try refetch token.
-    const refetch_token_ok = await this.refetchToken();
+    // try refresh token.
+    const refresh_token_ok = await this.refreshToken();
 
-    if (!refetch_token_ok) {
-      // unable to login from refetch token
+    if (!refresh_token_ok) {
+      // unable to login from refresh token
       return false;
     }
 
-    this.startRefetchTokenInterval();
+    window.addEventListener('storage', (event) => this.syncLogout(event));
+    this.startRefreshTokenInterval();
+  }
+
+  async syncLogout(event) {
+
+    if (event.key !== 'logout') return;
+
+    const req = await axios(`${this.endpoint}/auth/logout`, {
+      method: 'post',
+      withCredentials: true,
+    });
+    this.clearStore();
+    this.stopRefreshTokenInterval();
+
+    if (this.logged_in) {
+      this.logged_in = false;
+      if (typeof this.auth_state_change_function === 'function') {
+        this.auth_state_change_function(null);
+      }
+    }
   }
 
   onAuthStateChanged(f) {
@@ -50,25 +62,19 @@ export default class nhost {
 
   initSession(data) {
     this.setSession(data);
-    this.startRefetchTokenInterval();
+    this.startRefreshTokenInterval();
   }
 
   setSession(data) {
     const {
       jwt_token,
-      refetch_token,
-      user_id,
     } = data;
 
     var claims = jwt_decode(jwt_token);
+
     this.claims = claims;
 
-    this.storage.clear();
-    this.storage.setItem('refetch_token', refetch_token);
-    this.storage.setItem('user_id', user_id);
-
     this.inMemory['jwt_token'] = jwt_token;
-    this.inMemory['user_id'] = user_id;
     this.inMemory['exp'] = (parseInt(claims.exp, 10) * 1000);
 
     if (!this.logged_in) {
@@ -76,7 +82,7 @@ export default class nhost {
       if (typeof this.auth_state_change_function === 'function') {
         this.auth_state_change_function(data);
       } else {
-        console.log('no auth state change function')
+        // console.log('no auth state change function')
       }
     }
   }
@@ -89,44 +95,37 @@ export default class nhost {
     return this.inMemory['jwt_token'];
   }
 
-  startRefetchTokenInterval() {
-    this.interval = setInterval(this.refetchToken, (5*60*1000));
+  startRefreshTokenInterval() {
+    this.interval = setInterval(this.refreshToken, (5*60*1000));
   }
 
-  stopRefetchTokenInterval() {
+  stopRefreshTokenInterval() {
     clearInterval(this.interval);
   }
 
-  async refetchToken() {
 
-    const user_id = this.storage.getItem('user_id');
-    const refetch_token = this.storage.getItem('refetch_token');
-
-    if (!user_id || !refetch_token) {
-      return this.logout();
-    }
-
+  async refreshToken() {
     try {
-      const data = await this.refetch_token(user_id, refetch_token);
+      const data = await this.refresh_token();
       this.setSession(data);
       return true;
     } catch (e) {
-      return this.logout();
+      return await this.logout();
     }
   }
-
 
   isAuthenticated() {
     return this.logged_in;
   }
 
-  async register(username, password, register_data = null) {
+  async register(email, username, password, register_data = null) {
 
     let req;
     try {
-      req = await axios(`${this.endpoint}/auth/register`, {
+      req = await axios(`${this.endpoint}/auth/local/register`, {
         method: 'post',
         data: {
+          email,
           username,
           password,
           register_data,
@@ -145,7 +144,7 @@ export default class nhost {
     let data;
 
     try {
-      const req = await axios(`${this.endpoint}/auth/login`, {
+      const req = await axios(`${this.endpoint}/auth/local/login`, {
         method: 'post',
         data: {
           username,
@@ -163,14 +162,25 @@ export default class nhost {
     this.initSession(data);
   }
 
-  logout() {
+  async logout(all = false) {
+    window.localStorage.setItem('logout', Date.now())
+
+    if (all) {
+      const req = await axios(`${this.endpoint}/auth/logout-all`, {
+        method: 'post',
+        withCredentials: true,
+      });
+    } else {
+      const req = await axios(`${this.endpoint}/auth/logout`, {
+        method: 'post',
+        withCredentials: true,
+      });
+    }
     this.inMemory = {
       jwt_token: null,
-      user_id: null,
       exp: null,
     };
-    this.storage.clear();
-    this.stopRefetchTokenInterval();
+    this.stopRefreshTokenInterval();
 
     if (this.logged_in) {
       this.logged_in = false;
@@ -181,15 +191,11 @@ export default class nhost {
     return false;
   }
 
-  async refetch_token(user_id, refetch_token) {
+  async refresh_token() {
 
     try {
-      const req = await axios(`${this.endpoint}/auth/refetch-token`, {
+      const req = await axios(`${this.endpoint}/auth/refresh-token`, {
         method: 'post',
-        data: {
-          user_id,
-          refetch_token,
-        },
         withCredentials: true,
       });
 
@@ -204,7 +210,7 @@ export default class nhost {
   async activate_account(secret_token) {
 
     try {
-      const req = await axios(`${this.endpoint}/auth/activate-account`, {
+      const req = await axios(`${this.endpoint}/auth/local/activate-account`, {
         method: 'post',
         data: {
           secret_token,
@@ -222,7 +228,7 @@ export default class nhost {
   async new_password(secret_token, password) {
 
     try {
-      const req = await axios(`${this.endpoint}/auth/new-password`, {
+      const req = await axios(`${this.endpoint}/auth/local/new-password`, {
         method: 'post',
         data: {
           secret_token,
@@ -236,6 +242,12 @@ export default class nhost {
     } catch (e) {
       throw e.response;
     }
+  }
+
+  clearStore() {
+    this.store = {
+      jwt_token: null,
+    };
   }
 
 
