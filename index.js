@@ -1,5 +1,5 @@
 import jwt_decode from 'jwt-decode';
-import axios from 'axios';
+import queryString from 'query-string';import axios from 'axios';
 
 export default class nhost {
   constructor(config) {
@@ -15,12 +15,61 @@ export default class nhost {
     this.refreshToken = this.refreshToken.bind(this);
     this.autoLogin = this.autoLogin.bind(this);
 
+    // use external storage?
+    if(config.storage) {
+      this.storage = config.storage
+    } else {
+      this.storage = localStorage;
+    }
+
+    // if callback from other OAuth provider
+    if (this.storage.getItem('refresh_token') == null) {
+
+      const parsed = queryString.parse(window.location.search);
+
+      if ('refresh_token' in parsed) {
+
+        this.storage.setItem('refresh_token', parsed.refresh_token);
+
+        // remove `refresh_token` and `auth_success` from url
+        let new_url = this._removeParam('refresh_token', window.location.href)
+        new_url = this._removeParam('auth_success', new_url);
+
+        try {
+          window.history.pushState({}, document.title, new_url);
+        } catch {
+          // window object not available
+        }
+      }
+    }
+
     this.inMemory = {
+      storage_jwt_token: null,
       jwt_token: null,
-      exp: null,
+      claims: null,
     };
 
     this.autoLogin()
+  }
+
+  _removeParam(key, sourceURL) {
+    var rtn = sourceURL.split("?")[0],
+    param,
+    params_arr = [],
+    queryString = (sourceURL.indexOf("?") !== -1) ? sourceURL.split("?")[1] : "";
+    if (queryString !== "") {
+      params_arr = queryString.split("&");
+      for (var i = params_arr.length - 1; i >= 0; i -= 1) {
+        param = params_arr[i].split("=")[0];
+        if (param === key) {
+          params_arr.splice(i, 1);
+        }
+      }
+      if (params_arr.length > 0) {
+        rtn = rtn + "?" + params_arr.join("&");
+      }
+    }
+    return rtn;
   }
 
   async autoLogin() {
@@ -32,7 +81,12 @@ export default class nhost {
       return false;
     }
 
-    window.addEventListener('storage', (event) => this.syncLogout(event));
+    try {
+      window.addEventListener('storage', (event) => this.syncLogout(event));
+    } catch (e) {
+      // nothing..
+    }
+
     this.startRefreshTokenInterval();
   }
 
@@ -67,17 +121,20 @@ export default class nhost {
 
   setSession(data) {
     const {
+      storage_jwt_token,
+      refresh_token,
       jwt_token,
     } = data;
 
+    this.storage.setItem('refresh_token', refresh_token);
+
     var claims = jwt_decode(jwt_token);
 
-    this.claims = claims;
-
+    this.inMemory['storage_jwt_token'] = storage_jwt_token;
     this.inMemory['jwt_token'] = jwt_token;
-    this.inMemory['exp'] = (parseInt(claims.exp, 10) * 1000);
+    this.inMemory['claims'] =   claims['https://hasura.io/jwt/claims'];
 
-    if (!this.logged_in) {
+    if (this.logged_in !== true) {
       this.logged_in = true;
       if (typeof this.auth_state_change_function === 'function') {
         this.auth_state_change_function(data);
@@ -88,7 +145,11 @@ export default class nhost {
   }
 
   getClaims() {
-    return this.claims;
+    return this.inMemory['claims'];
+  }
+
+  getClaim(claim) {
+    return this.inMemory['claims'][claim];
   }
 
   getJWTToken() {
@@ -163,15 +224,29 @@ export default class nhost {
   }
 
   async logout(all = false) {
-    window.localStorage.setItem('logout', Date.now())
+
+
+    try {
+      window.localStorage.setItem('logout', Date.now())
+    } catch (e) {
+      // nothing
+    }
+
+    const refresh_token = this.storage.getItem('refresh_token');
 
     if (all) {
       const req = await axios(`${this.endpoint}/auth/logout-all`, {
+        data: {
+          refresh_token,
+        },
         method: 'post',
         withCredentials: true,
       });
     } else {
       const req = await axios(`${this.endpoint}/auth/logout`, {
+        data: {
+          refresh_token,
+        },
         method: 'post',
         withCredentials: true,
       });
@@ -180,6 +255,8 @@ export default class nhost {
       jwt_token: null,
       exp: null,
     };
+
+    this.storage.clear()
     this.stopRefreshTokenInterval();
 
     if (this.logged_in) {
@@ -193,8 +270,17 @@ export default class nhost {
 
   async refresh_token() {
 
+    const refresh_token = this.storage.getItem('refresh_token');
+
+    if (refresh_token == null) {
+      return false;
+    }
+
     try {
       const req = await axios(`${this.endpoint}/auth/refresh-token`, {
+        data: {
+          refresh_token
+        },
         method: 'post',
         withCredentials: true,
       });

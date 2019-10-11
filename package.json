@@ -18,6 +18,7 @@
   "homepage": "https://github.com/nhost/nhost-js-sdk#readme",
   "dependencies": {
     "axios": "^0.18.1",
-    "jwt-decode": "^2.2.0"
+    "jwt-decode": "^2.2.0",
+    "query-string": "^6.8.3"
   }
 }
