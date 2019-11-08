@@ -1,21 +1,20 @@
 import jwt_decode from 'jwt-decode';
-import queryString from 'query-string';import axios from 'axios';
+import queryString from 'query-string';
+import axios from 'axios';
 
-export default class nhost {
-  constructor(config) {
+export default class auth {
+  constructor(config, inMemory) {
+
+    this.inMemory = inMemory;
     this.endpoint = config.endpoint;
-    this.claims= null;
-
     this.logged_in = null;
-
     this.auth_state_change_function = null;
-
     this.interval = null;
 
     this.refreshToken = this.refreshToken.bind(this);
     this.autoLogin = this.autoLogin.bind(this);
 
-    // use external storage?
+    // use external configured storage if existing, ex AsyncStorage
     if(config.storage) {
       this.storage = config.storage
     } else {
@@ -43,11 +42,8 @@ export default class nhost {
       }
     }
 
-    this.inMemory = {
-      storage_jwt_token: null,
-      jwt_token: null,
-      claims: null,
-    };
+    this.inMemory.jwt_token = null;
+    this.inMemory.claims = null;
 
     this.autoLogin()
   }
@@ -121,18 +117,16 @@ export default class nhost {
 
   setSession(data) {
     const {
-      storage_jwt_token,
       refresh_token,
       jwt_token,
     } = data;
 
     this.storage.setItem('refresh_token', refresh_token);
 
-    var claims = jwt_decode(jwt_token);
+    const claims = jwt_decode(jwt_token);
 
-    this.inMemory['storage_jwt_token'] = storage_jwt_token;
-    this.inMemory['jwt_token'] = jwt_token;
-    this.inMemory['claims'] =   claims['https://hasura.io/jwt/claims'];
+    this.inMemory.jwt_token = jwt_token;
+    this.inMemory.claims = claims['https://hasura.io/jwt/claims'];
 
     if (this.logged_in !== true) {
       this.logged_in = true;
@@ -145,15 +139,15 @@ export default class nhost {
   }
 
   getClaims() {
-    return this.inMemory['claims'];
+    return this.inMemory.claims;
   }
 
   getClaim(claim) {
-    return this.inMemory['claims'][claim];
+    return this.inMemory.claims[claim];
   }
 
   getJWTToken() {
-    return this.inMemory['jwt_token'];
+    return this.inMemory.jwt_token;
   }
 
   startRefreshTokenInterval() {
@@ -334,32 +328,5 @@ export default class nhost {
     this.store = {
       jwt_token: null,
     };
-  }
-
-
-  // upload file
-  async upload(path, files, onUploadProgress = false) {
-
-    let form_data = new FormData();
-
-    files.forEach(file => {
-      form_data.append('files', file);
-    });
-
-    const upload_res = await axios.post(`${this.endpoint}/storage/upload`, form_data, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'x-path': path,
-      },
-      onUploadProgress: onUploadProgress,
-      withCredentials: true,
-    });
-
-    return upload_res.data;
-  }
-
-  // get file url
-  url(path) {
-    return `${this.endpoint}/storage/file/${path}`;
   }
 }
