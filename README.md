@@ -32,9 +32,11 @@ export default new nhost(config);
 
 ### Register
 
+`register_data` is optional
+
 ```
 try {
-  await nhost.register(username, password);
+  await nhost.register(email, username, password, register_data);
 } catch (e) {
   // handle error
 }
@@ -89,22 +91,34 @@ try {
 
 ## Storage
 
-### Upload file(s)
+### Upload file
+
+`metadata` is optional
+`onUploadProgress` is optional
 
 ```
 try {
-  await nhost.upload(path, files);
+  await nhost.put(path, file, metadata, onUploadProgress);
 } catch (e) {
   // handle error
 }
 ```
 
-
-### Get file url
+### Delete file
 
 ```
 try {
-  await nhost.url(file_path);
+  await nhost.delete(path);
+} catch (e) {
+  // handle error
+}
+```
+
+### Get downloadable URL of file
+
+```
+try {
+  await nhost.getDownloadURL(path);
 } catch (e) {
   // handle error
 }
