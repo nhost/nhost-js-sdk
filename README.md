@@ -13,19 +13,26 @@ in ex `/src/nhost/index.js`:
 
 ```
 import nhost from 'nhost-js-sdk';
-import { BACKEND_ENDPOINT } from '../config';
 
 const config = {
-  endpoint: 'https://backend-xxxxxx.nhost.io/'
+  endpoint: process.env.REACT_APP_BACKEND_ENDPOINT,
 };
 
-export default new nhost(config);
+nhost.initializeApp(config);
+
+const auth = nhost.auth();
+const storage = nhost.storage();
+
+export {
+  auth,
+  storage
+};
 ```
 
 
 ## Usage across in your app
 
-`import nhost from '../nhost';`
+`import nhost from './path-to-nhost/index.js';`
 
 
 ## Auth
