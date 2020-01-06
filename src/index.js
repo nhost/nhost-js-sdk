@@ -1,5 +1,5 @@
-import storage from './storage';
-import auth from './auth';
+const storage = require('./storage');
+const auth = require('./auth');
 
 class nhost {
   constructor() {
