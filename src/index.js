@@ -1,5 +1,8 @@
-const storage = require('./storage');
-const auth = require('./auth');
+import "core-js/stable";
+import "regenerator-runtime/runtime";
+
+import storage from './storage';
+import auth from './auth';
 
 class nhost {
   constructor() {
