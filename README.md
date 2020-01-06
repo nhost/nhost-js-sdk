@@ -32,7 +32,7 @@ export {
 
 ## Usage across in your app
 
-`import nhost from './path-to-nhost/index.js';`
+`import { auth, storage } from './path-to-nhost/index.js';`
 
 
 ## Auth
