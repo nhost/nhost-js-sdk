@@ -43,7 +43,7 @@ export {
 
 ```
 try {
-  await nhost.register(email, username, password, register_data);
+  await auth.register(email, username, password, register_data);
 } catch (e) {
   // handle error
 }
@@ -53,7 +53,7 @@ try {
 
 ```
 try {
-  await nhost.login(username, password);
+  await auth.login(username, password);
 } catch (e) {
   // handle error
 }
@@ -62,13 +62,13 @@ try {
 ### Logout
 
 ```
-  nhost.logout();
+  auth.logout();
 ```
 
 ### onAuthStateChanged
 
 ```
-nhost.onAuthStateChanged(data => {
+auth.onAuthStateChanged(data => {
   console.log('auth state changed!');
   console.log({data});
 });
@@ -79,7 +79,7 @@ nhost.onAuthStateChanged(data => {
 
 ```
 try {
-  await nhost.activate_account(secret_token);
+  await auth.activate_account(secret_token);
 } catch (e) {
   // handle error
 }
@@ -90,7 +90,7 @@ try {
 
 ```
 try {
-  await nhost.new_password(secret_token, new_password);
+  await auth.new_password(secret_token, new_password);
 } catch (e) {
   // handle error
 }
@@ -105,7 +105,7 @@ try {
 
 ```
 try {
-  await nhost.put(path, file, metadata, onUploadProgress);
+  await storage.put(path, file, metadata, onUploadProgress);
 } catch (e) {
   // handle error
 }
@@ -115,7 +115,7 @@ try {
 
 ```
 try {
-  await nhost.delete(path);
+  await storage.delete(path);
 } catch (e) {
   // handle error
 }
@@ -125,7 +125,7 @@ try {
 
 ```
 try {
-  await nhost.getDownloadURL(path);
+  await storage.getDownloadURL(path);
 } catch (e) {
   // handle error
 }
