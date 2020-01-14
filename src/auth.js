@@ -93,6 +93,7 @@ export default class auth {
     const req = await axios(`${this.endpoint}/auth/logout`, {
       method: 'post',
       withCredentials: true,
+      validateStatus: () => true,
     });
     this.clearStore();
     this.stopRefreshTokenInterval();
@@ -219,11 +220,10 @@ export default class auth {
 
   async logout(all = false) {
 
-
     try {
       window.localStorage.setItem('logout', Date.now())
     } catch (e) {
-      // nothing
+      // noop
     }
 
     const refresh_token = this.storage.getItem('refresh_token');
@@ -233,18 +233,19 @@ export default class auth {
         data: {
           refresh_token,
         },
-        method: 'post',
-        withCredentials: true,
+        method: 'POST',
+        validateStatus: () => true,
       });
     } else {
       const req = await axios(`${this.endpoint}/auth/logout`, {
         data: {
-          refresh_token,
+          refresh_token2: '123',
         },
-        method: 'post',
-        withCredentials: true,
+        method: 'POST',
+        validateStatus: () => true,
       });
     }
+
     this.inMemory = {
       jwt_token: null,
       exp: null,
