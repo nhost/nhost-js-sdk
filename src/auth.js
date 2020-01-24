@@ -239,7 +239,7 @@ export default class auth {
     } else {
       const req = await axios(`${this.endpoint}/auth/logout`, {
         data: {
-          refresh_token2: '123',
+          refresh_token,
         },
         method: 'POST',
         validateStatus: () => true,
