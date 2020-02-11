@@ -59,6 +59,16 @@ try {
 }
 ```
 
+### Login as an anonymous user
+
+```
+try {
+  await auth.signInAnonymously();
+} catch (e) {
+  // handle error
+}
+```
+
 ### Logout
 
 ```
