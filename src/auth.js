@@ -159,15 +159,22 @@ export default class auth {
     clearInterval(this.interval);
   }
 
-
   async refreshToken() {
     try {
       const data = await this.refresh_token();
+
+      if (!data) {
+        return false;
+      }
+
       this.setSession(data);
-      return true;
     } catch (e) {
-      return await this.logout();
+      if (e.response && e.response.status === 401) {
+        return await this.logout();
+      }
     }
+
+    return true;
   }
 
   isAuthenticated() {
@@ -193,6 +200,22 @@ export default class auth {
     }
 
     return req.data;
+  }
+
+  async signInAnonymously(register_data = null) {
+    let req;
+    try {
+      req = await axios(`${this.endpoint}/auth/local/sign-in-anonymously`, {
+        method: 'post',
+        data: {
+          register_data,
+        },
+      });
+    } catch (e) {
+      throw e.response;
+    }
+
+    this.initSession(req.data);
   }
 
   async login(username, password) {
@@ -237,13 +260,17 @@ export default class auth {
         validateStatus: () => true,
       });
     } else {
-      const req = await axios(`${this.endpoint}/auth/logout`, {
-        data: {
-          refresh_token,
-        },
-        method: 'POST',
-        validateStatus: () => true,
-      });
+      try {
+        const req = await axios(`${this.endpoint}/auth/logout`, {
+          data: {
+            refresh_token,
+          },
+          method: 'POST',
+          validateStatus: () => true,
+        });
+      } catch (e) {
+        // noop
+      }
     }
 
     this.inMemory = {
@@ -279,11 +306,9 @@ export default class auth {
         method: 'post',
         withCredentials: true,
       });
-
       return req.data;
-
     } catch (e) {
-      throw e.response;
+      throw e;
     }
   }
 
