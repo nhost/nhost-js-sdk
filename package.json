@@ -1,33 +1,15 @@
 {
   "name": "nhost-js-sdk",
-  "version": "1.2.0",
-  "description": "",
-  "main": "lib/index.js",
+  "version": "2.0.0",
+  "description": "Nhost JS SDK",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "babel src -d lib",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nhost/nhost-js-sdk.git"
-  },
-  "author": "Johan Eliasson",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/nhost/nhost-js-sdk/issues"
-  },
-  "homepage": "https://github.com/nhost/nhost-js-sdk#readme",
+  "author": "Nhost",
+  "license": "MIT",
   "dependencies": {
-    "axios": "^0.18.1",
-    "core-js": "^3.6.1",
-    "jwt-decode": "^2.2.0",
-    "query-string": "^6.8.3",
-    "regenerator-runtime": "^0.13.3"
-  },
-  "devDependencies": {
-    "@babel/cli": "^7.7.7",
-    "@babel/core": "^7.7.7",
-    "@babel/preset-env": "^7.7.7",
-    "babel-polyfill": "^6.26.0"
+    "axios": "^0.19.2"
   }
 }
