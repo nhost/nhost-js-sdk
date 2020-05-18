@@ -1,12 +1,16 @@
 import NhostAuth from "./Auth";
 import * as types from "./types";
 
-export default class Nhost {
+class Nhost {
   private base_url: string | null;
   private app_initialized: boolean;
   constructor() {
     this.base_url = null;
     this.app_initialized = false;
+  }
+
+  public test(): string {
+    return "test OK";
   }
 
   public initializeApp(config: types.Config) {
@@ -26,3 +30,5 @@ export default class Nhost {
     return new NhostAuth(config);
   }
 }
+
+export default new Nhost();
