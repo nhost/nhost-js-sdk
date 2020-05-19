@@ -1,12 +1,17 @@
 import NhostAuth from "./Auth";
+import JWTMemory from "./JWTMemory";
 import * as types from "./types";
 
 class Nhost {
   private base_url: string | null;
   private app_initialized: boolean;
+  private JWTMemory: JWTMemory;
+
   constructor() {
     this.base_url = null;
     this.app_initialized = false;
+
+    this.JWTMemory = new JWTMemory();
   }
 
   public test(): string {
@@ -27,7 +32,7 @@ class Nhost {
       base_url: this.base_url,
     };
 
-    return new NhostAuth(config);
+    return new NhostAuth(config, this.JWTMemory);
   }
 }
 

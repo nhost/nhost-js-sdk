@@ -1,13 +1,15 @@
 import axios, { AxiosInstance } from "axios";
 import * as types from "./types";
+import JWTMemory from "./JWTMemory";
 
 export default class Auth {
   private http_client: AxiosInstance;
   private auth_changed_functions: Function[];
   private login_state: boolean | null;
   private refresh_interval: number;
+  private JWTMemory: JWTMemory;
 
-  constructor(config: types.Config) {
+  constructor(config: types.Config, JWTMemory: JWTMemory) {
     this.http_client = axios.create({
       baseURL: config.base_url,
       timeout: 1000,
@@ -17,6 +19,7 @@ export default class Auth {
     this.login_state = null;
     this.auth_changed_functions = [];
     this.refresh_interval;
+    this.JWTMemory = JWTMemory;
 
     this.autoLogin();
   }
@@ -27,7 +30,14 @@ export default class Auth {
     this.refreshToken();
   }
 
-  private setLoginState(state: boolean): void {
+  private setLoginState(state: boolean, jwt_token: string = ""): void {
+    // set new jwt_token
+    if (jwt_token) {
+      console.log("set new JWT:");
+      console.log({ jwt_token });
+      this.JWTMemory.setJWT(jwt_token);
+    }
+
     // early exit
     if (this.login_state === state) return;
 
@@ -60,16 +70,20 @@ export default class Auth {
   }
 
   public async login(email: string, password: string): Promise<void> {
+    let login_res;
     try {
-      await this.http_client.post("/auth/login", {
+      login_res = await this.http_client.post("/auth/login", {
         email,
         password,
       });
     } catch (error) {
       throw error;
     }
+    console.log("login res:");
+    console.log(login_res);
+    console.log(login_res.data.jwt_token);
 
-    this.setLoginState(true);
+    this.setLoginState(true, login_res.data.jwt_token);
   }
 
   public async logout(all: boolean = false): Promise<void> {
@@ -92,13 +106,18 @@ export default class Auth {
     return this.login_state;
   }
 
+  public getJWTToken(): string {
+    return this.JWTMemory.getJWT();
+  }
+
   private async refreshToken(): Promise<void> {
+    let res;
     try {
-      const res = await this.http_client.get("/auth/token/refresh");
+      res = await this.http_client.get("/auth/token/refresh");
     } catch (error) {
       return this.setLoginState(false);
     }
-    this.setLoginState(true);
+    this.setLoginState(true, res.data.jwt_token);
   }
 
   private authStateChanged(state: boolean): void {
