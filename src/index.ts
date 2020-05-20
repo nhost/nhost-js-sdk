@@ -1,4 +1,5 @@
 import NhostAuth from "./Auth";
+import NhostStorage from "./Storage";
 import JWTMemory from "./JWTMemory";
 import * as types from "./types";
 
@@ -33,6 +34,18 @@ class Nhost {
     };
 
     return new NhostAuth(config, this.JWTMemory);
+  }
+
+  public storage() {
+    if (!this.app_initialized || !this.base_url) {
+      throw "app is not initialized. Call nhost.initializeApp(config).";
+    }
+
+    const config = {
+      base_url: this.base_url,
+    };
+
+    return new NhostStorage(config, this.JWTMemory);
   }
 }
 

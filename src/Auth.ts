@@ -12,7 +12,7 @@ export default class Auth {
   constructor(config: types.Config, JWTMemory: JWTMemory) {
     this.http_client = axios.create({
       baseURL: config.base_url,
-      timeout: 1000,
+      timeout: 10000,
       withCredentials: true,
     });
 
@@ -58,11 +58,16 @@ export default class Auth {
     this.authStateChanged(this.login_state);
   }
 
-  public async register(email: string, password: string): Promise<void> {
+  public async register(
+    email: string,
+    password: string,
+    register_data: any
+  ): Promise<void> {
     try {
       await this.http_client.post("/auth/register", {
         email,
         password,
+        // user_data: register_data,
       });
     } catch (error) {
       throw error;
