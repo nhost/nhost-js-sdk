@@ -25,16 +25,12 @@ export default class Auth {
   }
 
   private autoLogin() {
-    console.log("auto login");
-
     this.refreshToken();
   }
 
   private setLoginState(state: boolean, jwt_token: string = ""): void {
     // set new jwt_token
     if (jwt_token) {
-      console.log("set new JWT:");
-      console.log({ jwt_token });
       this.JWTMemory.setJWT(jwt_token);
     }
 
@@ -84,10 +80,6 @@ export default class Auth {
     } catch (error) {
       throw error;
     }
-    console.log("login res:");
-    console.log(login_res);
-    console.log(login_res.data.jwt_token);
-
     this.setLoginState(true, login_res.data.jwt_token);
   }
 
