@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    // "target": "es5",
+    // "module": "commonjs",
+    // "allowJs": false,
+    // "declaration": true,
+    // "sourceMap": true,
+    // "outDir": "./dist",
+    // "lib": ["es2017", "es7", "es6", "dom"],
+    // "strict": true,
+    // "baseUrl": "./",
+    // "esModuleInterop": true,
+    // "skipLibCheck": true,
+    // "forceConsistentCasingInFileNames": true
+    "declaration": true,
+    "strictNullChecks": true,
+    "target": "es5",
+    "outDir": "dist",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "lib": ["es2015", "dom"],
+    "rootDir": "src"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
