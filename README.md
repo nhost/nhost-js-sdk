@@ -28,9 +28,9 @@ export {
 };
 ```
 
-## Usage across in your app
+## Usage auth and storage across in your app
 
-`import { auth, storage } from './path-to-nhost/index.js';`
+`import { auth, storage } from 'src/nhost/index.js';`
 
 ## Auth
 
@@ -95,8 +95,7 @@ try {
 
 ### Upload file
 
-`metadata` is optional
-`onUploadProgress` is optional
+`metadata` and `onUploadProgress` is optional
 
 ```
 await storage.put(path, file, metadata, onUploadProgress);
