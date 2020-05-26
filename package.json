@@ -11,6 +11,8 @@
   "author": "Nhost",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.19.2"
+    "@types/jwt-decode": "^2.2.1",
+    "axios": "^0.19.2",
+    "jwt-decode": "^2.2.0"
   }
 }

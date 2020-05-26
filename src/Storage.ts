@@ -50,4 +50,9 @@ export default class Storage {
     const upload_res = await this.http_client.delete(`storage/o${path}`);
     return upload_res.data;
   }
+
+  async getMetadata(path: string): Promise<object> {
+    const res = await this.http_client.get(`storage/m${path}`);
+    return res.data;
+  }
 }

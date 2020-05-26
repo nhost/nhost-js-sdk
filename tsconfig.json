@@ -9,7 +9,7 @@
     // "lib": ["es2017", "es7", "es6", "dom"],
     // "strict": true,
     // "baseUrl": "./",
-    // "esModuleInterop": true,
+    "esModuleInterop": true,
     // "skipLibCheck": true,
     // "forceConsistentCasingInFileNames": true
     "declaration": true,

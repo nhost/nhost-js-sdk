@@ -107,6 +107,10 @@ export default class Auth {
     return this.JWTMemory.getJWT();
   }
 
+  public getClaim(claim: string): string {
+    return this.JWTMemory.getClaim(claim);
+  }
+
   private async refreshToken(): Promise<void> {
     let res;
     try {
