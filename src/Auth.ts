@@ -11,7 +11,7 @@ export default class Auth {
 
   constructor(config: types.Config, JWTMemory: JWTMemory) {
     this.http_client = axios.create({
-      baseURL: config.base_url,
+      baseURL: `${config.base_url}/auth`,
       timeout: 10000,
       withCredentials: true,
     });
@@ -60,7 +60,7 @@ export default class Auth {
     register_data: any
   ): Promise<void> {
     try {
-      await this.http_client.post("/auth/register", {
+      await this.http_client.post("/register", {
         email,
         password,
         // user_data: register_data,
@@ -73,7 +73,7 @@ export default class Auth {
   public async login(email: string, password: string): Promise<void> {
     let login_res;
     try {
-      login_res = await this.http_client.post("/auth/login", {
+      login_res = await this.http_client.post("/login", {
         email,
         password,
       });
@@ -85,7 +85,7 @@ export default class Auth {
 
   public async logout(all: boolean = false): Promise<void> {
     try {
-      await this.http_client.post("/auth/logout", {
+      await this.http_client.post("/logout", {
         all,
       });
     } catch (error) {
@@ -114,7 +114,7 @@ export default class Auth {
   private async refreshToken(): Promise<void> {
     let res;
     try {
-      res = await this.http_client.get("/auth/token/refresh");
+      res = await this.http_client.get("/token/refresh");
     } catch (error) {
       return this.setLoginState(false);
     }
@@ -125,5 +125,49 @@ export default class Auth {
     for (const authChangedFunction of this.auth_changed_functions) {
       authChangedFunction(state);
     }
+  }
+
+  public async changeEmail(new_email: string): Promise<void> {
+    await this.http_client.post("/change-email", {
+      new_email,
+    });
+  }
+
+  public async changeEmailRequest(new_email: string): Promise<void> {
+    await this.http_client.post("/change-email/request", {
+      new_email,
+    });
+  }
+
+  public async changeEmailChange(ticket: string): Promise<void> {
+    await this.http_client.post("/change-email/change", {
+      ticket,
+    });
+  }
+
+  public async changePassword(
+    old_password: string,
+    new_password: string
+  ): Promise<void> {
+    await this.http_client.post("/change-password", {
+      old_password,
+      new_password,
+    });
+  }
+
+  public async changePasswordRequest(email: string): Promise<void> {
+    await this.http_client.post("/change-password/request", {
+      email,
+    });
+  }
+
+  public async changePasswordChange(
+    new_password: string,
+    ticket: string
+  ): Promise<void> {
+    await this.http_client.post("/change-password/change", {
+      new_password,
+      ticket,
+    });
   }
 }
