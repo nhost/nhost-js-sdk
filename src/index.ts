@@ -15,10 +15,6 @@ class Nhost {
     this.JWTMemory = new JWTMemory();
   }
 
-  public test(): string {
-    return "test OK";
-  }
-
   public initializeApp(config: types.Config) {
     this.base_url = config.base_url;
     this.app_initialized = true;

@@ -1,0 +1,44 @@
+version: "3.6"
+services:
+  postgres:
+    image: postgres:12
+    restart: always
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    env_file: .env
+  graphql-engine:
+    image: hasura/graphql-engine:v1.2.2.cli-migrations
+    depends_on:
+      - "postgres"
+    restart: always
+    env_file: .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./migrations:/hasura-migrations
+  hasura-backend-plus:
+    #image: nhost/hasura-backend-plus:latest
+    build: ../../../hasura-backend-plus
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      HOST: "0.0.0.0"
+    env_file: .env
+    volumes:
+      - ./custom:/app/custom
+  minio:
+    image: minio/minio
+    restart: always
+    ports:
+      - "9000:9000"
+    env_file: .env
+    entrypoint: sh
+    volumes:
+      - ./db_data:/data
+    command: "-c 'mkdir -p /export/nhost && /usr/bin/minio server /export'"
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025 # smtp server
+      - 8025:8025 # web ui

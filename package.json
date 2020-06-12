@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "test": "jest --runInBand --coverage"
   },
   "author": "Nhost",
   "license": "MIT",
@@ -14,5 +15,21 @@
     "@types/jwt-decode": "^2.2.1",
     "axios": "^0.19.2",
     "jwt-decode": "^2.2.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.0",
+    "docker-compose": "^0.23.4",
+    "fs-extra": "^9.0.1",
+    "jest": "^26.0.1",
+    "jest-extended": "^0.11.5",
+    "ts-jest": "^26.1.0",
+    "typescript": "^3.9.5"
+  },
+  "jest": {
+    "verbose": true,
+    "testEnvironment": "jsdom",
+    "globalSetup": "./src/test/globalSetup.ts",
+    "globalTeardown": "./src/test/globalTeardown.ts",
+    "preset": "ts-jest"
   }
 }

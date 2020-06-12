@@ -6,7 +6,8 @@ export default class Auth {
   private http_client: AxiosInstance;
   private auth_changed_functions: Function[];
   private login_state: boolean | null;
-  private refresh_interval: number;
+  private refresh_interval: any;
+  private refresh_interval_time: number;
   private JWTMemory: JWTMemory;
 
   constructor(config: types.Config, JWTMemory: JWTMemory) {
@@ -44,7 +45,7 @@ export default class Auth {
 
     if (this.login_state) {
       // start refresh token interval
-      this.refresh_interval = setInterval(this.refreshToken.bind(this), 10000);
+      this.refresh_interval = setInterval(this.refreshToken.bind(this), 30000);
     } else {
       // stop refresh interval
       clearInterval(this.refresh_interval);
@@ -57,7 +58,7 @@ export default class Auth {
   public async register(
     email: string,
     password: string,
-    register_data: any
+    register_data?: any
   ): Promise<void> {
     try {
       await this.http_client.post("/register", {
@@ -92,6 +93,7 @@ export default class Auth {
       throw error;
     }
 
+    this.JWTMemory.clearJWT();
     this.setLoginState(false);
   }
 
@@ -125,6 +127,12 @@ export default class Auth {
     for (const authChangedFunction of this.auth_changed_functions) {
       authChangedFunction(state);
     }
+  }
+
+  public async activate(ticket: string): Promise<void> {
+    await this.http_client.post("/activate", {
+      ticket,
+    });
   }
 
   public async changeEmail(new_email: string): Promise<void> {
