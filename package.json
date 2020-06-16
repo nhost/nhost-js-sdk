@@ -13,6 +13,13 @@
     "test": "jest --runInBand --coverage",
     "version": "tsc"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nhost/nhost-js-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nhost/nhost-js-sdk/issues"
+  },
   "author": "Nhost",
   "license": "MIT",
   "dependencies": {
