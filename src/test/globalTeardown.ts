@@ -1,13 +1,14 @@
-const compose = require("docker-compose");
-const path = require("path");
-const fs = require("fs-extra");
+// const compose = require("docker-compose");
+// const path = require("path");
+
+import * as compose from "docker-compose";
+import path from "path";
 
 module.exports = async () => {
-  console.log("global TEARDOWN");
-
-  // docker-compose down
   await compose.down({
     cwd: path.join(__dirname),
     log: true,
   });
+
+  console.log("global TEARDOWN");
 };
