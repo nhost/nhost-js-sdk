@@ -14,7 +14,7 @@ In ex `/src/nhost/index.js`:
 import nhost from 'nhost-js-sdk';
 
 const config = {
-  endpoint: process.env.REACT_APP_BACKEND_ENDPOINT,
+  endpoint: 'https://backend-xxxx.nhost.app',
 };
 
 nhost.initializeApp(config);
@@ -37,24 +37,14 @@ export {
 ### Register
 
 ```
-await auth.register(email, password);
+auth.register(email, password);
 ```
 
 ### Login
 
 ```
-await auth.login(email, password);
+auth.login(email, password);
 ```
-
-<!-- ### Login as an anonymous user
-
-```
-try {
-  await auth.signInAnonymously();
-} catch (e) {
-  // handle error
-}
-``` -->
 
 ### Logout
 
@@ -65,75 +55,90 @@ auth.logout();
 ### onAuthStateChanged
 
 ```
-auth.onAuthStateChanged(data => {
+auth.onAuthStateChanged(logged_in => {
   console.log('auth state changed!');
-  console.log({data});
+  console.log({logged_in});
 });
 ```
 
-<!-- ### Activate account
+### Check if user is authenticated
 
 ```
-try {
-  await auth.activate_account(secret_token);
-} catch (e) {
-  // handle error
-}
+auth.isAuthenticated();
 ```
 
-### New password
+### Get JWT token
 
 ```
-try {
-  await auth.new_password(secret_token, new_password);
-} catch (e) {
-  // handle error
-}
-``` -->
+auth.getJWTToken();
+```
+
+### Get JWT claim
+
+```
+auth.getClaim('x-hasura-user-id');
+```
+
+### Activate account
+
+```
+auth.activate(<ticket>);
+```
+
+### Change email address
+
+Note: The user must be logged in.
+
+```
+auth.changeEmail(new_email);
+```
+
+### Request new email change
+
+```
+auth.changeEmailRequest(new_email);
+```
+
+### Change to requested email
+
+```
+auth.changeEmailChange(ticket);
+```
+
+### Change password
+
+```
+auth.changePassword(old_password, new_password);
+```
+
+### Request new password
+
+```
+auth.changePasswordRequest(email);
+```
+
+### Change password using ticket
+
+```
+auth.changePasswordChange(new_password, ticket);
+```
 
 ## Storage
 
-### Upload file
-
-`metadata` and `onUploadProgress` is optional
+### Upload
 
 ```
-await storage.put(path, file, metadata, onUploadProgress);
+storage.put(path, file, metadata?, onUploadProgress?);
 ```
 
-### Get file
-
-Go to `https://backend-[id].nhost.app/storage/o/${path}`.
-
-### Delete file
+### Delete
 
 ```
-await storage.delete(path);
+storage.delete(path);
 ```
 
-<!-- ### Get downloadable URL of file
+### Get metadata
 
 ```
-try {
-  await storage.getDownloadURL(path);
-} catch (e) {
-  // handle error
-}
+auth.getMetadata(path);
 ```
-
-# React Native
-
-For React Native you can pass in `asyncStorage` for nhost to use instead of the default `localStorage`.
-
-```
-import nhost from 'nhost-js-sdk';
-import { AsyncStorage } from 'react-native';
-import { BACKEND_ENDPOINT } from '../config';
-
-const config = {
-  endpoint: 'https://backend-xxxxxx.nhost.io/'
-  storage: AsyncStorage
-};
-
-export default new nhost(config);
-``` -->
