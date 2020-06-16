@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "jest --runInBand --coverage"
+    "test": "jest --runInBand --coverage",
+    "version": "tsc"
   },
   "author": "Nhost",
   "license": "MIT",
@@ -31,5 +32,9 @@
     "globalSetup": "./src/test/globalSetup.ts",
     "globalTeardown": "./src/test/globalTeardown.ts",
     "preset": "ts-jest"
+  },
+  "np": {
+    "yarn": true,
+    "contents": "src/dist"
   }
 }
