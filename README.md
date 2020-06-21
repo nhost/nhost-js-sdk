@@ -14,7 +14,7 @@ In ex `/src/nhost/index.js`:
 import nhost from 'nhost-js-sdk';
 
 const config = {
-  endpoint: 'https://backend-xxxx.nhost.app',
+  base_url: 'https://backend-xxxx.nhost.app',
 };
 
 nhost.initializeApp(config);
