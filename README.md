@@ -140,5 +140,5 @@ storage.delete(path);
 ### Get metadata
 
 ```
-auth.getMetadata(path);
+storage.getMetadata(path);
 ```
