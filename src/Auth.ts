@@ -71,17 +71,27 @@ export default class Auth {
     }
   }
 
-  public async login(email: string, password: string): Promise<void> {
-    let login_res;
+  public async login(
+    email: string,
+    password: string
+  ): Promise<types.LoginData> {
+    let res;
     try {
-      login_res = await this.http_client.post("/login", {
+      res = await this.http_client.post("/login", {
         email,
         password,
       });
     } catch (error) {
       throw error;
     }
-    this.setLoginState(true, login_res.data.jwt_token);
+
+    if ("mfa" in res.data) {
+      return res.data;
+    }
+
+    this.setLoginState(true, res.data.jwt_token);
+
+    return {};
   }
 
   public async logout(all: boolean = false): Promise<void> {
@@ -177,5 +187,30 @@ export default class Auth {
       new_password,
       ticket,
     });
+  }
+
+  public async MFAGenerate(): Promise<void> {
+    const res = await this.http_client.post("/mfa/generate");
+    return res.data;
+  }
+
+  public async MFAEnable(code: string): Promise<void> {
+    await this.http_client.post("/mfa/enable", {
+      code,
+    });
+  }
+
+  public async MFADisable(code: string): Promise<void> {
+    await this.http_client.post("/mfa/disable", {
+      code,
+    });
+  }
+
+  public async MFATotp(code: string, ticket: string): Promise<void> {
+    const res = await this.http_client.post("/mfa/totp", {
+      code,
+      ticket,
+    });
+    this.setLoginState(true, res.data.jwt_token);
   }
 }

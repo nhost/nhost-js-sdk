@@ -10,11 +10,11 @@ Nhost JS SDK to handle **Auth** and **Storage**.
 
 In ex `/src/nhost/index.js`:
 
-```
-import nhost from 'nhost-js-sdk';
+```js
+import nhost from "nhost-js-sdk";
 
 const config = {
-  endpoint: 'https://backend-xxxx.nhost.app',
+  endpoint: "https://backend-xxxx.nhost.app",
 };
 
 nhost.initializeApp(config);
@@ -22,10 +22,7 @@ nhost.initializeApp(config);
 const auth = nhost.auth();
 const storage = nhost.storage();
 
-export {
-  auth,
-  storage
-};
+export { auth, storage };
 ```
 
 ## Usage auth and storage across in your app
@@ -36,52 +33,52 @@ export {
 
 ### Register
 
-```
+```js
 auth.register(email, password);
 ```
 
 ### Login
 
-```
+```js
 auth.login(email, password);
 ```
 
 ### Logout
 
-```
+```js
 auth.logout();
 ```
 
 ### onAuthStateChanged
 
-```
-auth.onAuthStateChanged(logged_in => {
-  console.log('auth state changed!');
-  console.log({logged_in});
+```js
+auth.onAuthStateChanged((logged_in) => {
+  console.log("auth state changed!");
+  console.log({ logged_in });
 });
 ```
 
 ### Check if user is authenticated
 
-```
+```js
 auth.isAuthenticated();
 ```
 
 ### Get JWT token
 
-```
+```js
 auth.getJWTToken();
 ```
 
 ### Get JWT claim
 
-```
-auth.getClaim('x-hasura-user-id');
+```js
+auth.getClaim("x-hasura-user-id");
 ```
 
 ### Activate account
 
-```
+```js
 auth.activate(<ticket>);
 ```
 
@@ -89,38 +86,66 @@ auth.activate(<ticket>);
 
 Note: The user must be logged in.
 
-```
+```js
 auth.changeEmail(new_email);
 ```
 
 ### Request new email change
 
-```
+```js
 auth.changeEmailRequest(new_email);
 ```
 
 ### Change to requested email
 
-```
+```js
 auth.changeEmailChange(ticket);
 ```
 
 ### Change password
 
-```
+```js
 auth.changePassword(old_password, new_password);
 ```
 
 ### Request new password
 
-```
+```js
 auth.changePasswordRequest(email);
 ```
 
 ### Change password using ticket
 
-```
+```js
 auth.changePasswordChange(new_password, ticket);
+```
+
+### Generate MFA QR-code
+
+Note: User must be logged in.
+
+```js
+auth.MFAGenerate();
+```
+
+### Enable MFA
+
+```js
+auth.enable(code);
+```
+
+### Disable MFA
+
+```js
+auth.enable(code);
+```
+
+### Login using TOTP
+
+Note: `ticket` comes from the `auth.login()` response if the user has MFA enabled.
+
+```js
+auth.MFATotp(code, ticket);
 ```
 
 ## Storage
