@@ -1,6 +1,14 @@
 export interface Config {
   base_url: string;
-  refresh_interval_time?: number;
+  use_cookies: boolean;
+  refresh_interval_time: number;
+  client_storage: ClientStorage;
+}
+
+export interface ClientStorage {
+  setItem: (key: string, value: unknown) => void;
+  getItem: (key: string) => unknown;
+  clear: () => void;
 }
 
 export interface LoginData {

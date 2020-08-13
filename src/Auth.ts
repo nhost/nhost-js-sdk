@@ -7,16 +7,28 @@ export default class Auth {
   private auth_changed_functions: Function[];
   private login_state: boolean | null;
   private refresh_interval: any;
+  private use_cookies: boolean;
   private refresh_interval_time: number;
+  private client_storage: types.ClientStorage;
   private JWTMemory: JWTMemory;
 
   constructor(config: types.Config, JWTMemory: JWTMemory) {
+    const {
+      base_url,
+      use_cookies,
+      refresh_interval_time,
+      client_storage,
+    } = config;
+
     this.http_client = axios.create({
-      baseURL: `${config.base_url}/auth`,
+      baseURL: `${base_url}/auth`,
       timeout: 10000,
       withCredentials: true,
     });
 
+    this.use_cookies = use_cookies;
+    this.refresh_interval_time = refresh_interval_time;
+    this.client_storage = client_storage;
     this.login_state = null;
     this.auth_changed_functions = [];
     this.refresh_interval;
@@ -80,6 +92,7 @@ export default class Auth {
       res = await this.http_client.post("/login", {
         email,
         password,
+        cookie: this.use_cookies,
       });
     } catch (error) {
       throw error;
@@ -91,6 +104,13 @@ export default class Auth {
 
     this.setLoginState(true, res.data.jwt_token);
 
+    console.log("use cookie, save refresh token?");
+
+    // set refresh token
+    if (!this.use_cookies) {
+      this.client_storage.setItem("refresh_token", res.data.refresh_token);
+    }
+
     return {};
   }
 
@@ -98,12 +118,15 @@ export default class Auth {
     try {
       await this.http_client.post("/logout", {
         all,
+        refresh_token: this.client_storage.getItem("refresh_token"),
       });
     } catch (error) {
-      throw error;
+      // throw error;
+      // noop
     }
 
     this.JWTMemory.clearJWT();
+    this.client_storage.removeItem("refresh_token");
     this.setLoginState(false);
   }
 
@@ -126,10 +149,20 @@ export default class Auth {
   private async refreshToken(): Promise<void> {
     let res;
     try {
-      res = await this.http_client.get("/token/refresh");
+      res = await this.http_client.get("/token/refresh", {
+        params: {
+          refresh_token: this.client_storage.getItem("refresh_token"),
+        },
+      });
     } catch (error) {
       return this.setLoginState(false);
     }
+
+    // set refresh token
+    if (!this.use_cookies) {
+      this.client_storage.setItem("refresh_token", res.data.refresh_token);
+    }
+
     this.setLoginState(true, res.data.jwt_token);
   }
 
@@ -167,10 +200,20 @@ export default class Auth {
     old_password: string,
     new_password: string
   ): Promise<void> {
-    await this.http_client.post("/change-password", {
-      old_password,
-      new_password,
-    });
+    const jwt_token = this.JWTMemory.getJWT();
+
+    await this.http_client.post(
+      "/change-password",
+      {
+        old_password,
+        new_password,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      }
+    );
   }
 
   public async changePasswordRequest(email: string): Promise<void> {
