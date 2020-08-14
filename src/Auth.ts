@@ -37,9 +37,6 @@ export default class Auth {
     this.refresh_interval;
     this.JWTMemory = JWTMemory;
 
-    console.log("inside auth, client storage type:");
-    console.log({ client_storage_type });
-
     this.autoLogin();
   }
 
@@ -60,7 +57,6 @@ export default class Auth {
         await this.client_storage.setItem(key, value);
         break;
       case "capacitor":
-        console.log("setItem for capacitor");
         if (typeof this.client_storage.set !== "function") {
           console.error(`this.client_storage.set is not a function`);
           break;
@@ -233,18 +229,10 @@ export default class Auth {
 
     this.setLoginState(true, res.data.jwt_token);
 
-    console.log("use cookie, save refresh token?");
-
     // set refresh token
     if (!this.use_cookies) {
-      console.log("save refresh token");
-      console.log(res.data.refresh_token);
       await this.setItem("refresh_token", res.data.refresh_token);
     }
-
-    const r = await this.getItem("refresh_token");
-
-    console.log({ r });
 
     return {};
   }

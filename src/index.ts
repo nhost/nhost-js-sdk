@@ -20,7 +20,6 @@ class Nhost {
   }
 
   public initializeApp(config: types.UserConfig) {
-    console.log({ config });
     this.base_url = config.base_url;
     this.app_initialized = true;
     this.use_cookies = config.use_cookies ? config.use_cookies : false;
@@ -29,7 +28,6 @@ class Nhost {
     this.client_storage_type = config.client_storage_type
       ? config.client_storage_type
       : "web";
-    console.log("init app");
   }
 
   public auth() {
