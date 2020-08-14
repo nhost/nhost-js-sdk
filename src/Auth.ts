@@ -13,7 +13,7 @@ export default class Auth {
   private client_storage_type: string;
   private JWTMemory: JWTMemory;
 
-  constructor(config: types.Config, JWTMemory: JWTMemory) {
+  constructor(config: types.AuthConfig, JWTMemory: JWTMemory) {
     const {
       base_url,
       use_cookies,

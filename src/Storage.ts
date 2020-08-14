@@ -6,7 +6,7 @@ export default class Storage {
   private http_client: AxiosInstance;
   private JWTMemory: JWTMemory;
 
-  constructor(config: types.Config, JWTMemory: JWTMemory) {
+  constructor(config: types.StorageConfig, JWTMemory: JWTMemory) {
     this.http_client = axios.create({
       baseURL: config.base_url,
       timeout: 120 * 1000, // milliseconds

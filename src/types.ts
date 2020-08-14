@@ -6,12 +6,17 @@ export interface UserConfig {
   client_storage_type?: string;
 }
 
-export interface Config {
+export interface AuthConfig {
   base_url: string;
   use_cookies: boolean;
   refresh_interval_time: number;
   client_storage: ClientStorage;
   client_storage_type: string;
+}
+
+export interface StorageConfig {
+  base_url: string;
+  use_cookies: boolean;
 }
 
 export interface ClientStorage {
@@ -26,10 +31,9 @@ export interface ClientStorage {
   set?: (options: { key: string; value: string }) => void;
   get?: (options: { key: string }) => any;
   remove?: (options: { key: string }) => void;
-  
 
   // expo-secure-storage
-  setItemAsync?: (key: string; value: string) => void;
+  setItemAsync?: (key: string, value: string) => void;
   getItemAsync?: (key: string) => any;
   deleteItemAsync?: (key: string) => void;
 }
