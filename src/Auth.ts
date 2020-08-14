@@ -309,9 +309,15 @@ export default class Auth {
   }
 
   public async changeEmail(new_email: string): Promise<void> {
-    await this.http_client.post("/change-email", {
-      new_email,
-    });
+    await this.http_client.post(
+      "/change-email",
+      {
+        new_email,
+      },
+      {
+        headers: this.generateHeaders(),
+      }
+    );
   }
 
   public async changeEmailRequest(new_email: string): Promise<void> {
@@ -359,20 +365,38 @@ export default class Auth {
   }
 
   public async MFAGenerate(): Promise<void> {
-    const res = await this.http_client.post("/mfa/generate");
+    const res = await this.http_client.post(
+      "/mfa/generate",
+      {},
+      {
+        headers: this.generateHeaders(),
+      }
+    );
     return res.data;
   }
 
   public async MFAEnable(code: string): Promise<void> {
-    await this.http_client.post("/mfa/enable", {
-      code,
-    });
+    await this.http_client.post(
+      "/mfa/enable",
+      {
+        code,
+      },
+      {
+        headers: this.generateHeaders(),
+      }
+    );
   }
 
   public async MFADisable(code: string): Promise<void> {
-    await this.http_client.post("/mfa/disable", {
-      code,
-    });
+    await this.http_client.post(
+      "/mfa/disable",
+      {
+        code,
+      },
+      {
+        headers: this.generateHeaders(),
+      }
+    );
   }
 
   public async MFATotp(code: string, ticket: string): Promise<void> {
@@ -380,6 +404,12 @@ export default class Auth {
       code,
       ticket,
     });
+
+    // set refresh token
+    if (!this.use_cookies) {
+      await this.setItem("refresh_token", res.data.refresh_token);
+    }
+
     this.setLoginState(true, res.data.jwt_token);
   }
 }
