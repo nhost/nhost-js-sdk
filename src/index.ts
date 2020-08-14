@@ -9,27 +9,27 @@ class Nhost {
   private use_cookies: boolean;
   private refresh_interval_time: number;
   private client_storage: types.ClientStorage;
+  private client_storage_type: string;
   private JWTMemory: JWTMemory;
 
   constructor() {
     this.base_url = null;
     this.app_initialized = false;
     this.use_cookies = false;
-
     this.JWTMemory = new JWTMemory();
   }
 
-  public initializeApp({
-    base_url,
-    use_cookies = false,
-    refresh_interval_time = 30,
-    client_storage = localStorage,
-  }: types.Config) {
-    this.base_url = base_url;
+  public initializeApp(config: types.UserConfig) {
+    console.log({ config });
+    this.base_url = config.base_url;
     this.app_initialized = true;
-    this.use_cookies = use_cookies;
-    this.refresh_interval_time = refresh_interval_time;
-    this.client_storage = client_storage;
+    this.use_cookies = config.use_cookies ? config.use_cookies : false;
+    this.refresh_interval_time = config.refresh_interval_time || 30; // 30 sec
+    this.client_storage = config.client_storage || window.localStorage;
+    this.client_storage_type = config.client_storage_type
+      ? config.client_storage_type
+      : "web";
+    console.log("init app");
   }
 
   public auth() {
@@ -42,6 +42,7 @@ class Nhost {
       use_cookies,
       refresh_interval_time,
       client_storage,
+      client_storage_type,
     } = this;
 
     const config = {
@@ -49,6 +50,7 @@ class Nhost {
       use_cookies,
       refresh_interval_time,
       client_storage,
+      client_storage_type,
     };
 
     return new NhostAuth(config, this.JWTMemory);

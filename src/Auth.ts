@@ -10,6 +10,7 @@ export default class Auth {
   private use_cookies: boolean;
   private refresh_interval_time: number;
   private client_storage: types.ClientStorage;
+  private client_storage_type: string;
   private JWTMemory: JWTMemory;
 
   constructor(config: types.Config, JWTMemory: JWTMemory) {
@@ -18,6 +19,7 @@ export default class Auth {
       use_cookies,
       refresh_interval_time,
       client_storage,
+      client_storage_type,
     } = config;
 
     this.http_client = axios.create({
@@ -29,15 +31,141 @@ export default class Auth {
     this.use_cookies = use_cookies;
     this.refresh_interval_time = refresh_interval_time;
     this.client_storage = client_storage;
+    this.client_storage_type = client_storage_type;
     this.login_state = null;
     this.auth_changed_functions = [];
     this.refresh_interval;
     this.JWTMemory = JWTMemory;
 
+    console.log("inside auth, client storage type:");
+    console.log({ client_storage_type });
+
     this.autoLogin();
   }
 
-  private autoLogin() {
+  private async setItem(key: string, value: string): Promise<void> {
+    switch (this.client_storage_type) {
+      case "web":
+        if (typeof this.client_storage.setItem !== "function") {
+          console.error(`this.client_storage.setItem is not a function`);
+          break;
+        }
+        this.client_storage.setItem(key, value);
+        break;
+      case "react-native":
+        if (typeof this.client_storage.setItem !== "function") {
+          console.error(`this.client_storage.setItem is not a function`);
+          break;
+        }
+        await this.client_storage.setItem(key, value);
+        break;
+      case "capacitor":
+        console.log("setItem for capacitor");
+        if (typeof this.client_storage.set !== "function") {
+          console.error(`this.client_storage.set is not a function`);
+          break;
+        }
+        await this.client_storage.set({ key, value });
+        break;
+      case "expo-secure-storage":
+        if (typeof this.client_storage.setItemAsync !== "function") {
+          console.error(`this.client_storage.setItemAsync is not a function`);
+          break;
+        }
+        this.client_storage.setItemAsync(key, value);
+        break;
+      default:
+        console.error(
+          `unknown client_storage_type: ${this.client_storage_type}`
+        );
+        break;
+    }
+  }
+
+  private async getItem(key: string): Promise<unknown> {
+    switch (this.client_storage_type) {
+      case "web":
+        if (typeof this.client_storage.getItem !== "function") {
+          console.error(`this.client_storage.getItem is not a function`);
+          break;
+        }
+        return this.client_storage.getItem(key);
+      case "react-native":
+        if (typeof this.client_storage.getItem !== "function") {
+          console.error(`this.client_storage.getItem is not a function`);
+          break;
+        }
+        return await this.client_storage.getItem(key);
+      case "capacitor":
+        if (typeof this.client_storage.get !== "function") {
+          console.error(`this.client_storage.get is not a function`);
+          break;
+        }
+        const res = await this.client_storage.get({ key });
+        return res.value;
+      case "expo-secure-storage":
+        if (typeof this.client_storage.getItemAsync !== "function") {
+          console.error(`this.client_storage.getItemAsync is not a function`);
+          break;
+        }
+        return this.client_storage.getItemAsync(key);
+      default:
+        console.error(
+          `unknown client_storage_type: ${this.client_storage_type}`
+        );
+        break;
+    }
+  }
+
+  private async removeItem(key: string): Promise<void> {
+    switch (this.client_storage_type) {
+      case "web":
+        if (typeof this.client_storage.removeItem !== "function") {
+          console.error(`this.client_storage.removeItem is not a function`);
+          break;
+        }
+        return this.client_storage.removeItem(key);
+      case "react-native":
+        if (typeof this.client_storage.removeItem !== "function") {
+          console.error(`this.client_storage.removeItem is not a function`);
+          break;
+        }
+        return await this.client_storage.removeItem(key);
+      case "capacitor":
+        if (typeof this.client_storage.remove !== "function") {
+          console.error(`this.client_storage.remove is not a function`);
+          break;
+        }
+        await this.client_storage.remove({ key });
+        break;
+      case "expo-secure-storage":
+        if (typeof this.client_storage.deleteItemAsync !== "function") {
+          console.error(
+            `this.client_storage.deleteItemAsync is not a function`
+          );
+          break;
+        }
+        this.client_storage.deleteItemAsync(key);
+        break;
+      default:
+        console.error(
+          `unknown client_storage_type: ${this.client_storage_type}`
+        );
+        break;
+    }
+  }
+
+  private generateHeaders(): null | types.Headers {
+    if (this.use_cookies) return null;
+
+    const jwt_token = this.JWTMemory.getJWT();
+
+    return {
+      Authorization: `Bearer ${jwt_token}`,
+    };
+  }
+
+  private autoLogin(): void {
     this.refreshToken();
   }
 
@@ -95,6 +223,7 @@ export default class Auth {
         cookie: this.use_cookies,
       });
     } catch (error) {
+      this.removeItem("refresh_token");
       throw error;
     }
 
@@ -108,25 +237,38 @@ export default class Auth {
 
     // set refresh token
     if (!this.use_cookies) {
-      this.client_storage.setItem("refresh_token", res.data.refresh_token);
+      console.log("save refresh token");
+      console.log(res.data.refresh_token);
+      await this.setItem("refresh_token", res.data.refresh_token);
     }
+
+    const r = await this.getItem("refresh_token");
+
+    console.log({ r });
 
     return {};
   }
 
   public async logout(all: boolean = false): Promise<void> {
     try {
-      await this.http_client.post("/logout", {
-        all,
-        refresh_token: this.client_storage.getItem("refresh_token"),
-      });
+      await this.http_client.post(
+        "/logout",
+        {
+          all,
+        },
+        {
+          params: {
+            refresh_token: await this.getItem("refresh_token"),
+          },
+        }
+      );
     } catch (error) {
       // throw error;
       // noop
     }
 
     this.JWTMemory.clearJWT();
-    this.client_storage.removeItem("refresh_token");
+    this.removeItem("refresh_token");
     this.setLoginState(false);
   }
 
@@ -151,7 +293,7 @@ export default class Auth {
     try {
       res = await this.http_client.get("/token/refresh", {
         params: {
-          refresh_token: this.client_storage.getItem("refresh_token"),
+          refresh_token: await this.getItem("refresh_token"),
         },
       });
     } catch (error) {
@@ -160,7 +302,7 @@ export default class Auth {
 
     // set refresh token
     if (!this.use_cookies) {
-      this.client_storage.setItem("refresh_token", res.data.refresh_token);
+      await this.setItem("refresh_token", res.data.refresh_token);
     }
 
     this.setLoginState(true, res.data.jwt_token);
@@ -200,8 +342,6 @@ export default class Auth {
     old_password: string,
     new_password: string
   ): Promise<void> {
-    const jwt_token = this.JWTMemory.getJWT();
-
     await this.http_client.post(
       "/change-password",
       {
@@ -209,9 +349,7 @@ export default class Auth {
         new_password,
       },
       {
-        headers: {
-          Authorization: `Bearer ${jwt_token}`,
-        },
+        headers: this.generateHeaders(),
       }
     );
   }
