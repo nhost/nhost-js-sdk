@@ -1,6 +1,6 @@
 {
   "name": "nhost-js-sdk",
-  "version": "2.0.4",
+  "version": "2.1.0-2",
   "description": "Nhost JS SDK",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,7 +25,8 @@
   "dependencies": {
     "@types/jwt-decode": "^2.2.1",
     "axios": "^0.19.2",
-    "jwt-decode": "^2.2.0"
+    "jwt-decode": "^2.2.0",
+    "query-string": "^6.13.1"
   },
   "devDependencies": {
     "@types/jest": "^26.0.0",
