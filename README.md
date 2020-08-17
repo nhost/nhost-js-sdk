@@ -14,7 +14,7 @@ In ex `/src/nhost/index.js`:
 import nhost from "nhost-js-sdk";
 
 const config = {
-  base_url: 'https://backend-xxxx.nhost.app',
+  base_url: "https://backend-xxxx.nhost.app",
 };
 
 nhost.initializeApp(config);
@@ -166,4 +166,79 @@ storage.delete(path);
 
 ```
 storage.getMetadata(path);
+```
+
+## Setup in different environments
+
+### React Native
+
+Install:
+
+`yarn add @react-native-community/async-storage`
+
+More info: [https://react-native-community.github.io/async-storage/docs/install](https://react-native-community.github.io/async-storage/docs/install).
+
+```js
+import nhost from "nhost-js-sdk";
+import AsyncStorage from "@react-native-community/async-storage";
+
+const config = {
+  base_url: "https://backend-xxxx.nhost.app",
+  client_storage: AsyncStorage,
+  client_storage_type: "react-native",
+};
+
+nhost.initializeApp(config);
+
+const auth = nhost.auth();
+const storage = nhost.storage();
+
+export { auth, storage };
+```
+
+### Ionic
+
+```js
+import nhost from "nhost-js-sdk";
+import { Plugins } from "@capacitor/core";
+const { Storage } = Plugins;
+
+const config = {
+  base_url: "https://backend-xxxx.nhost.app",
+  client_storage: Storage,
+  client_storage_type: "capacitor",
+};
+
+nhost.initializeApp(config);
+
+const auth = nhost.auth();
+const storage = nhost.storage();
+
+export { auth, storage };
+```
+
+### Expo
+
+Install:
+
+`expo install expo-secure-store`
+
+More info: [https://docs.expo.io/versions/latest/sdk/securestore/](https://docs.expo.io/versions/latest/sdk/securestore/).
+
+```js
+import nhost from "nhost-js-sdk";
+import * as SecureStore from "expo-secure-store";
+
+const config = {
+  base_url: "https://backend-xxxx.nhost.app",
+  client_storage: SecureStore,
+  client_storage_type: "expo-secure-storage",
+};
+
+nhost.initializeApp(config);
+
+const auth = nhost.auth();
+const storage = nhost.storage();
+
+export { auth, storage };
 ```
