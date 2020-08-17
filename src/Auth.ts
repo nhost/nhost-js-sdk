@@ -39,12 +39,17 @@ export default class Auth {
     this.JWTMemory = JWTMemory;
 
     // get refresh token from query param (from externa OAuth provider callback)
-    const parsed = queryString.parse(window.location.search);
-    const refresh_token =
-      "refresh_token" in parsed ? (parsed.refresh_token as string) : null;
+    let refresh_token = "";
+    try {
+      const parsed = queryString.parse(window.location.search);
+      const refresh_token =
+        "refresh_token" in parsed ? (parsed.refresh_token as string) : null;
 
-    if (refresh_token) {
-      // TODO: remove refresh_token from query parameters
+      if (refresh_token) {
+        // TODO: remove refresh_token from query parameters
+      }
+    } catch (e) {
+      //noop
     }
 
     this.autoLogin(refresh_token);
