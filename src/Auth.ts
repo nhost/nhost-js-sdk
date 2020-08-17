@@ -191,7 +191,10 @@ export default class Auth {
 
     if (this.login_state) {
       // start refresh token interval
-      this.refresh_interval = setInterval(this.refreshToken.bind(this), 30000);
+      this.refresh_interval = setInterval(
+        this.refreshToken.bind(this),
+        this.refresh_interval_time * 1000 // convert from seconds to milliseconds
+      );
     } else {
       // stop refresh interval
       clearInterval(this.refresh_interval);

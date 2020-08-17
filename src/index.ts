@@ -23,7 +23,7 @@ class Nhost {
     this.base_url = config.base_url;
     this.app_initialized = true;
     this.use_cookies = config.use_cookies ? config.use_cookies : false;
-    this.refresh_interval_time = config.refresh_interval_time || 30; // 30 sec
+    this.refresh_interval_time = config.refresh_interval_time || 600; // 10 minutes (600 seconds)
     this.client_storage = config.client_storage || window.localStorage;
     this.client_storage_type = config.client_storage_type
       ? config.client_storage_type
