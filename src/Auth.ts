@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from "axios";
+import queryString from "query-string";
 import * as types from "./types";
 import JWTMemory from "./JWTMemory";
 
@@ -25,7 +26,7 @@ export default class Auth {
     this.http_client = axios.create({
       baseURL: `${base_url}/auth`,
       timeout: 10000,
-      withCredentials: true,
+      withCredentials: this.use_cookies,
     });
 
     this.use_cookies = use_cookies;
@@ -37,7 +38,16 @@ export default class Auth {
     this.refresh_interval;
     this.JWTMemory = JWTMemory;
 
-    this.autoLogin();
+    // get refresh token from query param (from externa OAuth provider callback)
+    const parsed = queryString.parse(window.location.search);
+    const refresh_token =
+      "refresh_token" in parsed ? (parsed.refresh_token as string) : null;
+
+    if (refresh_token) {
+      // TODO: remove refresh_token from query parameters
+    }
+
+    this.autoLogin(refresh_token);
   }
 
   private async setItem(key: string, value: string): Promise<void> {
@@ -161,8 +171,8 @@ export default class Auth {
     };
   }
 
-  private autoLogin(): void {
-    this.refreshToken();
+  private autoLogin(refresh_token: string | null): void {
+    this.refreshToken(refresh_token);
   }
 
   private setLoginState(state: boolean, jwt_token: string = ""): void {
@@ -276,12 +286,17 @@ export default class Auth {
     return this.JWTMemory.getClaim(claim);
   }
 
-  private async refreshToken(): Promise<void> {
+  private async refreshToken(init_refresh_token: string | null): Promise<void> {
+    const refresh_token =
+      init_refresh_token || (await this.getItem("refresh_token"));
+
+    console.log({ refresh_token });
+
     let res;
     try {
       res = await this.http_client.get("/token/refresh", {
         params: {
-          refresh_token: await this.getItem("refresh_token"),
+          refresh_token,
         },
       });
     } catch (error) {
