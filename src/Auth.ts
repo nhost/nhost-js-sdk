@@ -39,7 +39,7 @@ export default class Auth {
     this.JWTMemory = JWTMemory;
 
     // get refresh token from query param (from externa OAuth provider callback)
-    let refresh_token = "";
+    let refresh_token: string | null = "";
     try {
       const parsed = queryString.parse(window.location.search);
       const refresh_token =
@@ -49,8 +49,11 @@ export default class Auth {
         // TODO: remove refresh_token from query parameters
       }
     } catch (e) {
-      //noop
+      // noop
+      // we are probably in a mobile.
     }
+
+    refresh_token = refresh_token !== "" ? refresh_token : null;
 
     this.autoLogin(refresh_token);
   }
@@ -278,8 +281,22 @@ export default class Auth {
     this.setLoginState(false);
   }
 
-  public onAuthStateChanged(fn: Function): void {
+  public onAuthStateChanged(fn: Function): Function {
     this.auth_changed_functions.push(fn);
+
+    // get index;
+    const auth_changed_function_index = this.auth_changed_functions.length - 1;
+
+    const unsubscribe = () => {
+      try {
+        // replace onAuthStateChanged with empty function
+        this.auth_changed_functions[auth_changed_function_index] = () => {};
+      } catch (err) {
+        console.warn("Unable to unsubscribe. Maybe you already did?");
+      }
+    };
+
+    return unsubscribe;
   }
 
   public isAuthenticated(): boolean | null {
@@ -297,8 +314,6 @@ export default class Auth {
   private async refreshToken(init_refresh_token: string | null): Promise<void> {
     const refresh_token =
       init_refresh_token || (await this.getItem("refresh_token"));
-
-    console.log({ refresh_token });
 
     let res;
     try {
