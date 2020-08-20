@@ -37,6 +37,12 @@ export { auth, storage };
 auth.register(email, password);
 ```
 
+### Register with user_data
+
+```js
+auth.register(email, password, { display_name: "Joe Doe" });
+```
+
 ### Login
 
 ```js
