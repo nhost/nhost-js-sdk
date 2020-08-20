@@ -25,6 +25,15 @@ const storage = nhost.storage();
 export { auth, storage };
 ```
 
+To use cookies (not recomended), use this config:
+
+```js
+const config = {
+  base_url: "https://backend-xxxx.nhost.app",
+  use_cookies: true,
+};
+```
+
 ## Usage auth and storage across in your app
 
 `import { auth, storage } from 'src/nhost/index.js';`
