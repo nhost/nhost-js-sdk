@@ -212,13 +212,13 @@ export default class Auth {
   public async register(
     email: string,
     password: string,
-    register_data?: any
+    user_data?: any
   ): Promise<void> {
     try {
       await this.http_client.post("/register", {
         email,
         password,
-        // user_data: register_data,
+        user_data,
       });
     } catch (error) {
       throw error;
