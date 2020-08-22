@@ -298,8 +298,6 @@ export default class Auth {
     const refresh_token =
       init_refresh_token || (await this.getItem("refresh_token"));
 
-    console.log({ refresh_token });
-
     let res;
     try {
       res = await this.http_client.get("/token/refresh", {
