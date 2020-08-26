@@ -39,10 +39,10 @@ export default class Auth {
     this.JWTMemory = JWTMemory;
 
     // get refresh token from query param (from externa OAuth provider callback)
-    let refresh_token = "";
+    let refresh_token: string | null = null;
     try {
       const parsed = queryString.parse(window.location.search);
-      const refresh_token =
+      refresh_token =
         "refresh_token" in parsed ? (parsed.refresh_token as string) : null;
 
       if (refresh_token) {
@@ -297,6 +297,10 @@ export default class Auth {
   private async refreshToken(init_refresh_token: string | null): Promise<void> {
     const refresh_token =
       init_refresh_token || (await this.getItem("refresh_token"));
+
+    if (!refresh_token) {
+      return;
+    }
 
     let res;
     try {
