@@ -299,7 +299,7 @@ export default class Auth {
       init_refresh_token || (await this.getItem("refresh_token"));
 
     if (!refresh_token) {
-      return;
+      return this.setLoginState(false);
     }
 
     let res;
