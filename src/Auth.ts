@@ -71,7 +71,7 @@ export default class Auth {
     if (queryString !== "") {
       params_arr = queryString.split("&");
       for (var i = params_arr.length - 1; i >= 0; i -= 1) {
-        param = params_arr[i].split("=") as array[0];
+        param = params_arr[i].split("=")[0];
         if (param === key) {
           params_arr.splice(i, 1);
         }
