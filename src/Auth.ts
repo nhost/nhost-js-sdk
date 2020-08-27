@@ -1,3 +1,4 @@
+// @ts-nocheck
 import axios, { AxiosInstance } from "axios";
 import queryString from "query-string";
 import * as types from "./types";
@@ -46,13 +47,40 @@ export default class Auth {
         "refresh_token" in parsed ? (parsed.refresh_token as string) : null;
 
       if (refresh_token) {
-        // TODO: remove refresh_token from query parameters
+        let new_url = this._removeParam("refresh_token", window.location.href);
+        try {
+          window.history.pushState({}, document.title, new_url);
+        } catch {
+          // noop
+          // window object not available
+        }
       }
     } catch (e) {
       //noop
     }
 
     this.autoLogin(refresh_token);
+  }
+
+  private _removeParam(key, sourceURL) {
+    var rtn = sourceURL.split("?")[0],
+      param,
+      params_arr = [],
+      queryString =
+        sourceURL.indexOf("?") !== -1 ? sourceURL.split("?")[1] : "";
+    if (queryString !== "") {
+      params_arr = queryString.split("&");
+      for (var i = params_arr.length - 1; i >= 0; i -= 1) {
+        param = params_arr[i].split("=") as array[0];
+        if (param === key) {
+          params_arr.splice(i, 1);
+        }
+      }
+      if (params_arr.length > 0) {
+        rtn = rtn + "?" + params_arr.join("&");
+      }
+    }
+    return rtn;
   }
 
   private async setItem(key: string, value: string): Promise<void> {
