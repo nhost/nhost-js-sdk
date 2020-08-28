@@ -374,9 +374,15 @@ export default class Auth {
   }
 
   public async changeEmailRequest(new_email: string): Promise<void> {
-    await this.http_client.post("/change-email/request", {
-      new_email,
-    });
+    await this.http_client.post(
+      "/change-email/request",
+      {
+        new_email,
+      },
+      {
+        headers: this.generateHeaders(),
+      }
+    );
   }
 
   public async changeEmailChange(ticket: string): Promise<void> {
