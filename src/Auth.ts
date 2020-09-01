@@ -222,6 +222,7 @@ export default class Auth {
     // set new jwt_token
     if (jwt_token) {
       this.JWTMemory.setJWT(jwt_token);
+      this.tokenChanged();
     }
 
     // early exit
@@ -380,7 +381,6 @@ export default class Auth {
       await this.setItem("refresh_token", res.data.refresh_token);
     }
 
-    this.tokenChanged();
     this.setLoginState(true, res.data.jwt_token, res.data.jwt_expires_in);
   }
 
