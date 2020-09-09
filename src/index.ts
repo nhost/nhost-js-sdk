@@ -11,6 +11,7 @@ class Nhost {
   private client_storage: types.ClientStorage;
   private client_storage_type: string;
   private JWTMemory: JWTMemory;
+  private ssr: boolean;
 
   constructor() {
     this.base_url = null;
@@ -28,6 +29,7 @@ class Nhost {
     this.client_storage_type = config.client_storage_type
       ? config.client_storage_type
       : "web";
+    this.ssr = config.ssr || false;
   }
 
   public auth() {
@@ -35,20 +37,13 @@ class Nhost {
       throw "app is not initialized. Call nhost.initializeApp(config). Read more here: https://docs.nhost.io/libraries/nhost-js-sdk#setup.";
     }
 
-    const {
-      base_url,
-      use_cookies,
-      refresh_interval_time,
-      client_storage,
-      client_storage_type,
-    } = this;
-
     const config = {
-      base_url,
-      use_cookies,
-      refresh_interval_time,
-      client_storage,
-      client_storage_type,
+      base_url: this.base_url,
+      use_cookies: this.use_cookies,
+      refresh_interval_time: this.refresh_interval_time,
+      client_storage: this.client_storage,
+      client_storage_type: this.client_storage_type,
+      ssr: this.ssr,
     };
 
     return new NhostAuth(config, this.JWTMemory);
@@ -59,12 +54,9 @@ class Nhost {
       throw "app is not initialized. Call nhost.initializeApp(config). Read more here: https://docs.nhost.io/libraries/nhost-js-sdk#setup.";
     }
 
-    const { base_url, use_cookies, refresh_interval_time } = this;
-
     const config = {
-      base_url,
-      use_cookies,
-      refresh_interval_time,
+      base_url: this.base_url,
+      use_cookies: this.use_cookies,
     };
 
     return new NhostStorage(config, this.JWTMemory);
