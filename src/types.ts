@@ -1,7 +1,7 @@
 export interface UserConfig {
   base_url: string;
   use_cookies?: boolean;
-  refresh_interval_time?: number;
+  refresh_interval_time?: number | null;
   client_storage?: ClientStorage;
   client_storage_type?: string;
   ssr?: boolean;
@@ -10,7 +10,7 @@ export interface UserConfig {
 export interface AuthConfig {
   base_url: string;
   use_cookies: boolean;
-  refresh_interval_time: number;
+  refresh_interval_time: number | null;
   client_storage: ClientStorage;
   client_storage_type: string;
   ssr?: boolean;
