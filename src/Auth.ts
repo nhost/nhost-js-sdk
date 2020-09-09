@@ -11,7 +11,7 @@ export default class Auth {
   private login_state: boolean | null;
   private refresh_interval: any;
   private use_cookies: boolean;
-  private refresh_interval_time: number;
+  private refresh_interval_time: number | null;
   private client_storage: types.ClientStorage;
   private client_storage_type: string;
   private JWTMemory: JWTMemory;
@@ -214,7 +214,11 @@ export default class Auth {
     this.refreshToken(refresh_token);
   }
 
-  private setLoginState(state: boolean, jwt_token: string = ""): void {
+  private setLoginState(
+    state: boolean,
+    jwt_token: string = "",
+    jwt_expires_in: number = 0
+  ): void {
     // set new jwt_token
     if (jwt_token) {
       this.JWTMemory.setJWT(jwt_token);
@@ -229,10 +233,16 @@ export default class Auth {
     this.login_state = state;
 
     if (this.login_state) {
+      const refresh_interval_time =
+        this.refresh_interval_time !== null ||
+        typeof jwt_expires_in !== "number"
+          ? this.refresh_interval_time
+          : Math.max(30 * 1000, jwt_expires_in - 10000);
+
       // start refresh token interval
       this.refresh_interval = setInterval(
         this.refreshToken.bind(this),
-        this.refresh_interval_time * 1000 // convert from seconds to milliseconds
+        refresh_interval_time
       );
     } else {
       // stop refresh interval
@@ -279,7 +289,7 @@ export default class Auth {
       return res.data;
     }
 
-    this.setLoginState(true, res.data.jwt_token);
+    this.setLoginState(true, res.data.jwt_token, res.data.jwt_expires_in);
 
     // set refresh token
     if (!this.use_cookies) {
@@ -367,7 +377,7 @@ export default class Auth {
     }
 
     this.tokenChanged();
-    this.setLoginState(true, res.data.jwt_token);
+    this.setLoginState(true, res.data.jwt_token, res.data.jwt_expires_in);
   }
 
   private tokenChanged(): void {
@@ -496,6 +506,6 @@ export default class Auth {
       await this.setItem("refresh_token", res.data.refresh_token);
     }
 
-    this.setLoginState(true, res.data.jwt_token);
+    this.setLoginState(true, res.data.jwt_token, res.data.jwt_expires_in);
   }
 }

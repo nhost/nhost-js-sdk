@@ -7,7 +7,7 @@ class Nhost {
   private base_url: string | null;
   private app_initialized: boolean;
   private use_cookies: boolean;
-  private refresh_interval_time: number;
+  private refresh_interval_time: number | null;
   private client_storage: types.ClientStorage;
   private client_storage_type: string;
   private JWTMemory: JWTMemory;
@@ -24,7 +24,7 @@ class Nhost {
     this.base_url = config.base_url;
     this.app_initialized = true;
     this.use_cookies = config.use_cookies ? config.use_cookies : false;
-    this.refresh_interval_time = config.refresh_interval_time || 600; // 10 minutes (600 seconds)
+    this.refresh_interval_time = config.refresh_interval_time || null; // 10 minutes (600 seconds)
     this.client_storage = config.client_storage || window.localStorage;
     this.client_storage_type = config.client_storage_type
       ? config.client_storage_type
