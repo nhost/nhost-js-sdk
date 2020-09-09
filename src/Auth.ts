@@ -15,6 +15,7 @@ export default class Auth {
   private client_storage: types.ClientStorage;
   private client_storage_type: string;
   private JWTMemory: JWTMemory;
+  private ssr: boolean;
 
   constructor(config: types.AuthConfig, JWTMemory: JWTMemory) {
     const {
@@ -23,13 +24,8 @@ export default class Auth {
       refresh_interval_time,
       client_storage,
       client_storage_type,
+      ssr,
     } = config;
-
-    this.http_client = axios.create({
-      baseURL: `${base_url}/auth`,
-      timeout: 10000,
-      withCredentials: this.use_cookies,
-    });
 
     this.use_cookies = use_cookies;
     this.refresh_interval_time = refresh_interval_time;
@@ -40,6 +36,13 @@ export default class Auth {
     this.auth_changed_functions = [];
     this.refresh_interval;
     this.JWTMemory = JWTMemory;
+    this.ssr = ssr;
+
+    this.http_client = axios.create({
+      baseURL: `${base_url}/auth`,
+      timeout: 10000,
+      withCredentials: this.use_cookies,
+    });
 
     // get refresh token from query param (from externa OAuth provider callback)
     let refresh_token: string | null = null;
@@ -58,9 +61,13 @@ export default class Auth {
         }
       }
     } catch (e) {
-      //noop
+      // noop
+      // we are probably in a mobile.
     }
 
+    refresh_token = refresh_token !== "" ? refresh_token : null;
+
+    console.log("in constructor, about to do autoLogin()");
     this.autoLogin(refresh_token);
   }
 
@@ -86,6 +93,10 @@ export default class Auth {
   }
 
   private async setItem(key: string, value: string): Promise<void> {
+    if (typeof value !== "string") {
+      return console.error(`value is not of type "string"`);
+    }
+
     switch (this.client_storage_type) {
       case "web":
         if (typeof this.client_storage.setItem !== "function") {
@@ -116,9 +127,6 @@ export default class Auth {
         this.client_storage.setItemAsync(key, value);
         break;
       default:
-        console.error(
-          `unknown client_storage_type: ${this.client_storage_type}`
-        );
         break;
     }
   }
@@ -151,9 +159,6 @@ export default class Auth {
         }
         return this.client_storage.getItemAsync(key);
       default:
-        console.error(
-          `unknown client_storage_type: ${this.client_storage_type}`
-        );
         break;
     }
   }
@@ -189,9 +194,6 @@ export default class Auth {
         this.client_storage.deleteItemAsync(key);
         break;
       default:
-        console.error(
-          `unknown client_storage_type: ${this.client_storage_type}`
-        );
         break;
     }
   }
@@ -207,6 +209,9 @@ export default class Auth {
   }
 
   private autoLogin(refresh_token: string | null): void {
+    if (this.ssr) {
+      return this.setLoginState(null);
+    }
     this.refreshToken(refresh_token);
   }
 
@@ -314,6 +319,20 @@ export default class Auth {
 
   public onAuthStateChanged(fn: Function): void {
     this.auth_changed_functions.push(fn);
+
+    // get index;
+    const auth_changed_function_index = this.auth_changed_functions.length - 1;
+
+    const unsubscribe = () => {
+      try {
+        // replace onAuthStateChanged with empty function
+        this.auth_changed_functions[auth_changed_function_index] = () => {};
+      } catch (err) {
+        console.warn("Unable to unsubscribe. Maybe you already did?");
+      }
+    };
+
+    return unsubscribe;
   }
 
   public isAuthenticated(): boolean | null {
@@ -331,10 +350,6 @@ export default class Auth {
   private async refreshToken(init_refresh_token: string | null): Promise<void> {
     const refresh_token =
       init_refresh_token || (await this.getItem("refresh_token"));
-
-    if (!refresh_token) {
-      return this.setLoginState(false);
-    }
 
     let res;
     try {

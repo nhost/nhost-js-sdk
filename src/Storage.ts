@@ -8,14 +8,14 @@ export default class Storage {
   private use_cookies: boolean;
 
   constructor(config: types.StorageConfig, JWTMemory: JWTMemory) {
+    this.JWTMemory = JWTMemory;
+    this.use_cookies = config.use_cookies;
+
     this.http_client = axios.create({
       baseURL: config.base_url,
       timeout: 120 * 1000, // milliseconds
-      withCredentials: true,
+      withCredentials: this.use_cookies,
     });
-
-    this.JWTMemory = JWTMemory;
-    this.use_cookies = config.use_cookies;
   }
 
   private generateAuthorizationHeader(): null | types.Headers {
@@ -39,7 +39,7 @@ export default class Storage {
 
     // todo: handle metadata
     if (metadata !== null) {
-      console.warn("Metadata is not yet handled.");
+      console.warn("Metadata is not yet handled in this NHOST JS SDK.");
     }
 
     const upload_res = await this.http_client.post(
