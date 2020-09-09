@@ -56,8 +56,11 @@ export default class Auth {
         }
       }
     } catch (e) {
-      //noop
+      // noop
+      // we are probably in a mobile.
     }
+
+    refresh_token = refresh_token !== "" ? refresh_token : null;
 
     this.autoLogin(refresh_token);
   }
@@ -306,8 +309,22 @@ export default class Auth {
     this.setLoginState(false);
   }
 
-  public onAuthStateChanged(fn: Function): void {
+  public onAuthStateChanged(fn: Function): Function {
     this.auth_changed_functions.push(fn);
+
+    // get index;
+    const auth_changed_function_index = this.auth_changed_functions.length - 1;
+
+    const unsubscribe = () => {
+      try {
+        // replace onAuthStateChanged with empty function
+        this.auth_changed_functions[auth_changed_function_index] = () => {};
+      } catch (err) {
+        console.warn("Unable to unsubscribe. Maybe you already did?");
+      }
+    };
+
+    return unsubscribe;
   }
 
   public isAuthenticated(): boolean | null {
