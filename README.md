@@ -38,6 +38,24 @@ const config = {
 
 `import { auth, storage } from 'src/nhost/index.js';`
 
+## Configuration
+
+### `base_url`
+
+URL to your backend. Usually `https://backend-xxx.nhost.app`.
+
+| Type   | Required | Default value |
+| ------ | -------- | ------------- |
+| string | Yes      |               |
+
+### `use_cookies`
+
+Use a HTTP Only Cookie for the `refresh_token`. Recommended value is `false` (default) because of cross platform issues and third party cookies issues in browsers.
+
+| Type    | Required | Default value |
+| ------- | -------- | ------------- |
+| boolean | NO       | `false`       |
+
 ## Auth
 
 ### Register
