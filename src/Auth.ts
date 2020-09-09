@@ -360,6 +360,10 @@ export default class Auth {
     const refresh_token =
       init_refresh_token || (await this.getItem("refresh_token"));
 
+    if (!refresh_token) {
+      return this.setLoginState(false);
+    }
+
     let res;
     try {
       res = await this.http_client.get("/token/refresh", {
