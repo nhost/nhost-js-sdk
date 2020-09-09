@@ -6,6 +6,7 @@ import JWTMemory from "./JWTMemory";
 
 export default class Auth {
   private http_client: AxiosInstance;
+  private token_changed_functions: Function[];
   private auth_changed_functions: Function[];
   private login_state: boolean | null;
   private refresh_interval: any;
@@ -31,6 +32,7 @@ export default class Auth {
     this.client_storage = client_storage;
     this.client_storage_type = client_storage_type;
     this.login_state = null;
+    this.token_changed_functions = [];
     this.auth_changed_functions = [];
     this.refresh_interval;
     this.JWTMemory = JWTMemory;
@@ -311,7 +313,11 @@ export default class Auth {
     this.setLoginState(false);
   }
 
-  public onAuthStateChanged(fn: Function): Function {
+  public onTokenChanged(fn: Function): void {
+    this.token_changed_functions.push(fn);
+  }
+
+  public onAuthStateChanged(fn: Function): void {
     this.auth_changed_functions.push(fn);
 
     // get index;
@@ -361,7 +367,14 @@ export default class Auth {
       await this.setItem("refresh_token", res.data.refresh_token);
     }
 
+    this.tokenChanged();
     this.setLoginState(true, res.data.jwt_token);
+  }
+
+  private tokenChanged(): void {
+    for (const tokenChangedFunction of this.token_changed_functions) {
+      tokenChangedFunction();
+    }
   }
 
   private authStateChanged(state: boolean): void {
