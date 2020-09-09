@@ -67,7 +67,6 @@ export default class Auth {
 
     refresh_token = refresh_token !== "" ? refresh_token : null;
 
-    console.log("in constructor, about to do autoLogin()");
     this.autoLogin(refresh_token);
   }
 
