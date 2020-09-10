@@ -46,23 +46,28 @@ export default class Auth {
 
     // get refresh token from query param (from externa OAuth provider callback)
     let refresh_token: string | null = null;
-    try {
-      const parsed = queryString.parse(window.location.search);
-      refresh_token =
-        "refresh_token" in parsed ? (parsed.refresh_token as string) : null;
 
-      if (refresh_token) {
-        let new_url = this._removeParam("refresh_token", window.location.href);
-        try {
-          window.history.pushState({}, document.title, new_url);
-        } catch {
-          // noop
-          // window object not available
+    if (!ssr) {
+      try {
+        const parsed = queryString.parse(window.location.search);
+        refresh_token =
+          "refresh_token" in parsed ? (parsed.refresh_token as string) : null;
+
+        if (refresh_token) {
+          let new_url = this._removeParam(
+            "refresh_token",
+            window.location.href
+          );
+          try {
+            window.history.pushState({}, document.title, new_url);
+          } catch {
+            // noop
+            // window object not available
+          }
         }
+      } catch (e) {
+        // noop. `window` not available probably.
       }
-    } catch (e) {
-      // noop
-      // we are probably in a mobile.
     }
 
     refresh_token = refresh_token !== "" ? refresh_token : null;
