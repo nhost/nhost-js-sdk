@@ -26,7 +26,7 @@ class Nhost {
     this.use_cookies = config.use_cookies ? config.use_cookies : false;
     this.refresh_interval_time = config.refresh_interval_time || null; // 10 minutes (600 seconds)
     this.client_storage =
-      config.client_storage || config.ssr ? {} : window.localStorage;
+      config.ssr ? {} : config.client_storage || window.localStorage;
     this.client_storage_type = config.client_storage_type
       ? config.client_storage_type
       : "web";
