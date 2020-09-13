@@ -366,7 +366,9 @@ export default class Auth {
       init_refresh_token || (await this.getItem("refresh_token"));
 
     if (!refresh_token) {
-      return this.setLoginState(false);
+      // palce at end of call-stack to let frontend get `null` first (to match SSR)
+      setTimeout(() => this.setLoginState(false), 0);
+      return;
     }
 
     let res;
