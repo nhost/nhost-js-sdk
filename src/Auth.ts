@@ -379,6 +379,7 @@ export default class Auth {
         },
       });
     } catch (error) {
+      // TODO: if error was 401 Unauthorized => clear refresh token locally.
       return this.setLoginState(false);
     }
 
