@@ -1,6 +1,12 @@
 import axios, { AxiosInstance } from "axios";
 import * as types from "./types";
 import JWTMemory from "./JWTMemory";
+import {
+  StringFormat,
+  base64Bytes,
+  utf8Bytes,
+  percentEncodedBytes,
+} from "./utils";
 
 export default class Storage {
   private http_client: AxiosInstance;
@@ -23,9 +29,13 @@ export default class Storage {
 
     const jwt_token = this.JWTMemory.getJWT();
 
-    return {
-      Authorization: `Bearer ${jwt_token}`,
-    };
+    if (jwt_token) {
+      return {
+        Authorization: `Bearer ${jwt_token}`,
+      };
+    } else {
+      return null;
+    }
   }
 
   async put(
@@ -41,6 +51,73 @@ export default class Storage {
     if (metadata !== null) {
       console.warn("Metadata is not yet handled in this NHOST JS SDK.");
     }
+
+    const upload_res = await this.http_client.post(
+      `/storage/o${path}`,
+      form_data,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          ...this.generateAuthorizationHeader(),
+        },
+        onUploadProgress,
+      }
+    );
+
+    return upload_res.data;
+  }
+
+  async putString(
+    path: string,
+    data: string,
+    type: StringFormat = "raw",
+    metadata: object | null = null,
+    onUploadProgress: any | undefined = undefined
+  ) {
+    // todo: handle metadata
+    // if (metadata !== null) {
+    //   console.warn("Metadata is not yet handled in this NHOST JS SDK.");
+    // }
+
+    let file;
+    if (type === "raw") {
+      const fileData = utf8Bytes(data);
+      const contentType =
+        metadata && metadata.hasOwnProperty("content-type")
+          ? metadata["content-type"]
+          : null;
+      file = new File([fileData], "tmp", { type: contentType });
+    } else if (type === "data_url") {
+      let isBase64 = false;
+      let contentType: string | undefined = undefined;
+
+      const matches = data.match(/^data:([^,]+)?,/);
+      if (matches === null) {
+        throw "Data must be formatted 'data:[<mediatype>][;base64],<data>";
+      }
+
+      const middle = matches[1] || null;
+      if (middle != null) {
+        isBase64 = middle.endsWith(";base64");
+        contentType = isBase64
+          ? middle.substring(0, middle.length - ";base64".length)
+          : middle;
+      }
+
+      const restData = data.substring(data.indexOf(",") + 1);
+
+      const fileData = isBase64
+        ? base64Bytes(StringFormat.BASE64, restData)
+        : percentEncodedBytes(restData);
+
+      file = new File([fileData], "tmp", { type: contentType });
+    }
+
+    // create fil from message
+
+    // create form data
+    let form_data = new FormData();
+    form_data.append("file", file);
 
     const upload_res = await this.http_client.post(
       `/storage/o${path}`,

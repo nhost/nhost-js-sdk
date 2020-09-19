@@ -189,17 +189,37 @@ auth.MFATotp(code, ticket);
 storage.put(path, file, metadata?, onUploadProgress?);
 ```
 
+### UploadString
+
+```js
+storage.putString(path, file, type?, metadata?, onUploadProgress?);
+```
+
+Type can be one of [`raw` (default), `data_url`].
+
+#### Exmaple:
+
+```js
+const data =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
+storage.putString("/public/red-dot.png", data, "data_url");
+```
+
 ### Delete
 
-```
+````
+
 storage.delete(path);
+
 ```
 
 ### Get metadata
 
 ```
+
 storage.getMetadata(path);
-```
+
+````
 
 ## Setup in different environments
 
