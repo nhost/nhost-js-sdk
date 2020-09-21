@@ -7,6 +7,7 @@ import {
   utf8Bytes,
   percentEncodedBytes,
 } from "./utils";
+import Blob from "fetch-blob";
 
 export default class Storage {
   private http_client: AxiosInstance;
@@ -86,7 +87,7 @@ export default class Storage {
         metadata && metadata.hasOwnProperty("content-type")
           ? metadata["content-type"]
           : null;
-      file = new File([fileData], "tmp", { type: contentType });
+      file = new Blob([fileData], { type: contentType });
     } else if (type === "data_url") {
       let isBase64 = false;
       let contentType: string | undefined = undefined;
@@ -110,7 +111,7 @@ export default class Storage {
         ? base64Bytes(StringFormat.BASE64, restData)
         : percentEncodedBytes(restData);
 
-      file = new File([fileData], "tmp", { type: contentType });
+      file = new Blob([fileData], { type: contentType });
     }
 
     // create fil from message
