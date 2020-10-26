@@ -405,9 +405,7 @@ export default class Auth {
   }
 
   public async activate(ticket: string): Promise<void> {
-    await this.http_client.post("/activate", {
-      ticket,
-    });
+    await this.http_client.get(`/activate?ticket=${ticket}`);
   }
 
   public async changeEmail(new_email: string): Promise<void> {
