@@ -4,7 +4,6 @@ export interface UserConfig {
   refresh_interval_time?: number | null;
   client_storage?: ClientStorage;
   client_storage_type?: string;
-  ssr?: boolean;
 }
 
 export interface AuthConfig {

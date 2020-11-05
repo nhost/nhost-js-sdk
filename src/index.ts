@@ -25,12 +25,13 @@ class Nhost {
     this.app_initialized = true;
     this.use_cookies = config.use_cookies ? config.use_cookies : false;
     this.refresh_interval_time = config.refresh_interval_time || null; // 10 minutes (600 seconds)
-    this.client_storage =
-      config.ssr ? {} : config.client_storage || window.localStorage;
+    this.ssr = typeof window === "undefined";
+    this.client_storage = this.ssr
+      ? {}
+      : config.client_storage || window.localStorage;
     this.client_storage_type = config.client_storage_type
       ? config.client_storage_type
       : "web";
-    this.ssr = config.ssr || false;
   }
 
   public auth() {
@@ -44,7 +45,7 @@ class Nhost {
       refresh_interval_time: this.refresh_interval_time,
       client_storage: this.client_storage,
       client_storage_type: this.client_storage_type,
-      ssr: this.ssr,
+      this.ssr,
     };
 
     return new NhostAuth(config, this.JWTMemory);
