@@ -45,7 +45,7 @@ class Nhost {
       refresh_interval_time: this.refresh_interval_time,
       client_storage: this.client_storage,
       client_storage_type: this.client_storage_type,
-      this.ssr,
+      ssr: this.ssr,
     };
 
     return new NhostAuth(config, this.JWTMemory);
