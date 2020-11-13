@@ -242,7 +242,7 @@ export default class Auth {
         this.refresh_interval_time !== null ||
         typeof jwt_expires_in !== "number"
           ? this.refresh_interval_time
-          : Math.max(30 * 1000, jwt_expires_in - 10000);
+          : Math.max(30 * 1000, jwt_expires_in - 45000); //45 sec before expires
 
       // start refresh token interval
       this.refresh_interval = setInterval(
@@ -388,8 +388,8 @@ export default class Auth {
       await this.setItem("refresh_token", res.data.refresh_token);
     }
 
-    this.tokenChanged();
     this.setLoginState(true, res.data.jwt_token, res.data.jwt_expires_in);
+    this.tokenChanged();
   }
 
   private tokenChanged(): void {
