@@ -1,6 +1,6 @@
 # Nhost JS SDK
 
-Nhost JS SDK to handle **Auth** and **Storage**.
+Nhost JS SDK to handle **Auth** and **Storage** with [Nhost](https://nhost.io).
 
 ## Install
 
