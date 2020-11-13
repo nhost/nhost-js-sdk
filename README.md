@@ -12,4 +12,4 @@ or
 
 ## Documentation
 
-[https://docs.nhost.io/libraries/nhost-js-sdk](https://docs.nhost.io/libraries/nhost-js-sdk).
+[https://docs.nhost.io/libraries/nhost-js-sdk](https://docs.nhost.io/libraries/nhost-js-sdk)
