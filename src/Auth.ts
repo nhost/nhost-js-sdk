@@ -35,6 +35,9 @@ export default class Auth {
     this.token_changed_functions = [];
     this.auth_changed_functions = [];
     this.refresh_interval;
+    this.refresh_sleep_check_interval;
+    this.refresh_interval_sleep_check_last_sample;
+    this.sample_rate = 2000; // check every 2 seconds
     this.JWTMemory = JWTMemory;
     this.ssr = ssr;
 
@@ -244,14 +247,28 @@ export default class Auth {
           ? this.refresh_interval_time
           : Math.max(30 * 1000, jwt_expires_in - 45000); //45 sec before expires
 
-      // start refresh token interval
+      // start refresh token interval after logging in
       this.refresh_interval = setInterval(
         this.refreshToken.bind(this),
         refresh_interval_time
       );
+
+      // refresh token after computer has been sleeping
+      // https://stackoverflow.com/questions/14112708/start-calling-js-function-when-pc-wakeup-from-sleep-mode
+      this.refresh_interval_sleep_check_last_sample = Date.now();
+      this.refresh_sleep_check_interval = setInterval(() => {
+        if (
+          Date.now() - this.refresh_interval_sleep_check_last_sample >=
+          this.sample_rate * 2
+        ) {
+          this.refreshToken();
+        }
+        this.refresh_interval_sleep_check_last_sample = Date.now();
+      }, this.sample_rate);
     } else {
       // stop refresh interval
       clearInterval(this.refresh_interval);
+      clearInterval(this.refresh_sleep_check_interval);
     }
 
     // call auth state change functions
