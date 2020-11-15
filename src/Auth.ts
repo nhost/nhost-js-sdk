@@ -37,7 +37,7 @@ export default class Auth {
     this.refresh_interval;
     this.refresh_sleep_check_interval;
     this.refresh_interval_sleep_check_last_sample;
-    this.sample_rate = 2000;
+    this.sample_rate = 2000; // check every 2 seconds
     this.JWTMemory = JWTMemory;
     this.ssr = ssr;
 
@@ -257,7 +257,10 @@ export default class Auth {
       // https://stackoverflow.com/questions/14112708/start-calling-js-function-when-pc-wakeup-from-sleep-mode
       this.refresh_interval_sleep_check_last_sample = Date.now();
       this.refresh_sleep_check_interval = setInterval(() => {
-        if (Date.now() - lastSample >= this.sample_rate * 2) {
+        if (
+          Date.now() - this.refresh_interval_sleep_check_last_sample >=
+          this.sample_rate * 2
+        ) {
           this.refreshToken();
         }
         this.refresh_interval_sleep_check_last_sample = Date.now();
