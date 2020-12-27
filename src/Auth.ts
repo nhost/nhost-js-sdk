@@ -374,7 +374,7 @@ export default class Auth {
     return this.JWTMemory.getJWT();
   }
 
-  public getClaim(claim: string): string {
+  public getClaim(claim: string): string | string[] {
     return this.JWTMemory.getClaim(claim);
   }
 
