@@ -526,13 +526,14 @@ export default class Auth {
     const res = await this.http_client.post("/mfa/totp", {
       code,
       ticket,
+      cookie: this.use_cookies,
     });
+
+    this.setLoginState(true, res.data.jwt_token, res.data.jwt_expires_in);
 
     // set refresh token
     if (!this.use_cookies) {
       await this.setItem("refresh_token", res.data.refresh_token);
     }
-
-    this.setLoginState(true, res.data.jwt_token, res.data.jwt_expires_in);
   }
 }
