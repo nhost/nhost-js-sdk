@@ -7,7 +7,7 @@ import {
   utf8Bytes,
   percentEncodedBytes,
 } from "./utils";
-import Blob from "blob";
+import { Blob } from "blob-polyfill";
 
 export default class Storage {
   private http_client: AxiosInstance;
