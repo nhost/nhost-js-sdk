@@ -397,7 +397,12 @@ export default class Auth {
       });
     } catch (error) {
       // TODO: if error was 401 Unauthorized => clear refresh token locally.
-      return this.setLoginState(false);
+      console.log("error refreshing..");
+      if (error.response?.status === 401) {
+        return this.setLoginState(false);
+      } else {
+        return; // refresh failed
+      }
     }
 
     // set refresh token
