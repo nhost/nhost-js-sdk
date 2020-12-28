@@ -7,7 +7,7 @@ import {
   utf8Bytes,
   percentEncodedBytes,
 } from "./utils";
-import Blob from "fetch-blob";
+import Blob from "node-blob";
 
 export default class Storage {
   private http_client: AxiosInstance;
