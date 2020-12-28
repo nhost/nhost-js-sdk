@@ -1,6 +1,6 @@
 {
   "name": "nhost-js-sdk",
-  "version": "2.3.5-3",
+  "version": "2.3.5-4",
   "description": "Nhost JS SDK",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
