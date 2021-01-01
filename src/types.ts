@@ -1,23 +1,23 @@
 export interface UserConfig {
-  base_url: string;
-  use_cookies?: boolean;
-  refresh_interval_time?: number | null;
-  client_storage?: ClientStorage;
-  client_storage_type?: string;
+  baseURL: string;
+  useCookies?: boolean;
+  refreshIntervalTime?: number | null;
+  clientStorage?: ClientStorage;
+  clientStorageType?: string;
 }
 
 export interface AuthConfig {
-  base_url: string;
-  use_cookies: boolean;
-  refresh_interval_time: number | null;
-  client_storage: ClientStorage;
-  client_storage_type: string;
+  baseURL: string;
+  useCookies: boolean;
+  refreshIntervalTime: number | null;
+  clientStorage: ClientStorage;
+  clientStorageType: string;
   ssr?: boolean;
 }
 
 export interface StorageConfig {
-  base_url: string;
-  use_cookies: boolean;
+  baseURL: string;
+  useCookies: boolean;
 }
 
 export interface ClientStorage {

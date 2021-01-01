@@ -1,7 +1,7 @@
 import nhost from "../index";
 
 const config = {
-  base_url: "http://localhost:3000",
+  baseURL: "http://localhost:3000",
 };
 
 nhost.initializeApp(config);

@@ -4,47 +4,47 @@ import JWTMemory from "./JWTMemory";
 import * as types from "./types";
 
 class Nhost {
-  private base_url: string | null;
-  private app_initialized: boolean;
-  private use_cookies: boolean;
-  private refresh_interval_time: number | null;
-  private client_storage: types.ClientStorage;
-  private client_storage_type: string;
+  private baseURL: string | null;
+  private appInitialized: boolean;
+  private useCookies: boolean;
+  private refreshIntervalTime: number | null;
+  private clientStorage: types.ClientStorage;
+  private clientStorageType: string;
   private JWTMemory: JWTMemory;
   private ssr: boolean;
 
   constructor() {
-    this.base_url = null;
-    this.app_initialized = false;
-    this.use_cookies = false;
+    this.baseURL = null;
+    this.appInitialized = false;
+    this.useCookies = false;
     this.JWTMemory = new JWTMemory();
   }
 
   public initializeApp(config: types.UserConfig) {
-    this.base_url = config.base_url;
-    this.app_initialized = true;
-    this.use_cookies = config.use_cookies ? config.use_cookies : false;
-    this.refresh_interval_time = config.refresh_interval_time || null; // 10 minutes (600 seconds)
+    this.baseURL = config.baseURL;
+    this.appInitialized = true;
+    this.useCookies = config.useCookies ? config.useCookies : false;
+    this.refreshIntervalTime = config.refreshIntervalTime || null; // 10 minutes (600 seconds)
     this.ssr = typeof window === "undefined";
-    this.client_storage = this.ssr
+    this.clientStorage = this.ssr
       ? {}
-      : config.client_storage || window.localStorage;
-    this.client_storage_type = config.client_storage_type
-      ? config.client_storage_type
+      : config.clientStorage || window.localStorage;
+    this.clientStorageType = config.clientStorageType
+      ? config.clientStorageType
       : "web";
   }
 
   public auth() {
-    if (!this.app_initialized || !this.base_url) {
+    if (!this.appInitialized || !this.baseURL) {
       throw "app is not initialized. Call nhost.initializeApp(config). Read more here: https://docs.nhost.io/libraries/nhost-js-sdk#setup.";
     }
 
     const config = {
-      base_url: this.base_url,
-      use_cookies: this.use_cookies,
-      refresh_interval_time: this.refresh_interval_time,
-      client_storage: this.client_storage,
-      client_storage_type: this.client_storage_type,
+      baseURL: this.baseURL,
+      useCookies: this.useCookies,
+      refreshIntervalTime: this.refreshIntervalTime,
+      clientStorage: this.clientStorage,
+      clientStorageType: this.clientStorageType,
       ssr: this.ssr,
     };
 
@@ -52,13 +52,13 @@ class Nhost {
   }
 
   public storage() {
-    if (!this.app_initialized || !this.base_url) {
+    if (!this.appInitialized || !this.baseURL) {
       throw "app is not initialized. Call nhost.initializeApp(config). Read more here: https://docs.nhost.io/libraries/nhost-js-sdk#setup.";
     }
 
     const config = {
-      base_url: this.base_url,
-      use_cookies: this.use_cookies,
+      baseURL: this.baseURL,
+      useCookies: this.useCookies,
     };
 
     return new NhostStorage(config, this.JWTMemory);

@@ -26,7 +26,7 @@
     "@types/jwt-decode": "^2.2.1",
     "axios": "^0.19.2",
     "jwt-decode": "^2.2.0",
-    "node-blob": "git://github.com/elitan/node-blob.git#patch-1",
+    "node-blob": "git://github.com/elitan/node-blob.git",
     "query-string": "^6.13.1"
   },
   "devDependencies": {

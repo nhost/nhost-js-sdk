@@ -48,13 +48,13 @@ it("should not be able to login with wrong password", async () => {
 });
 
 it("should be able to retreive JWT Token", async () => {
-  const jwt_token = auth.getJWTToken();
-  expect(jwt_token).toBeString();
+  const JWTToken = auth.getJWTToken();
+  expect(JWTToken).toBeString();
 });
 
 it("should be able to get user id as JWT claim", async () => {
-  const user_id = auth.getClaim("x-hasura-user-id");
-  expect(user_id).toBeString();
+  const userId = auth.getClaim("x-hasura-user-id");
+  expect(userId).toBeString();
 });
 
 it("should be authenticated", async () => {
@@ -74,8 +74,8 @@ it("should not be authenticated", async () => {
 });
 
 it("should not be able to retreive JWT token after logout", () => {
-  const jwt_token = auth.getJWTToken();
-  expect(jwt_token).toBeEmpty();
+  const JWTToken = auth.getJWTToken();
+  expect(JWTToken).toBeEmpty();
 });
 
 it("should not be able to retreive JWT claim after logout (should fail)", () => {
@@ -83,20 +83,20 @@ it("should not be able to retreive JWT claim after logout (should fail)", () => 
 });
 
 describe("testing onAuthStateChanged", () => {
-  let auth_state_change_test_var;
+  let authStateChangeTestVar;
 
   auth.onAuthStateChanged((d) => {
-    auth_state_change_test_var = d;
+    authStateChangeTestVar = d;
   });
 
   it("should not be able to logout twice", async () => {
     await auth.login("user-1@nhost.io", "password-1");
-    expect(auth_state_change_test_var).toBe(true);
+    expect(authStateChangeTestVar).toBe(true);
   });
 
-  it("auth_state_change_test_var should update to false after logout (should fail)", async () => {
+  it("authStateChangeTestVar should update to false after logout (should fail)", async () => {
     await auth.logout();
-    expect(auth_state_change_test_var).toBe(false);
+    expect(authStateChangeTestVar).toBe(false);
   });
 });
 
@@ -110,9 +110,9 @@ describe.skip("Refresh time interval", () => {
 
     jest.advanceTimersByTime(4000);
 
-    const new_jwt_token = auth.getJWTToken();
+    const newJWTToken = auth.getJWTToken();
 
-    expect(new_jwt_token).not.toBe(jwt_token);
+    expect(newJWTToken).not.toBe(jwt_token);
   });
 });
 
