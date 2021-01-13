@@ -353,11 +353,27 @@ export default class Auth {
     this.setLoginState(false);
   }
 
-  public onTokenChanged(fn: Function): void {
+  public onTokenChanged(fn: Function): Function {
     this.tokenChangedFunctions.push(fn);
+
+    // get index;
+    const tokenChangedFunctionIndex = this.authChangedFunctions.length - 1;
+
+    const unsubscribe = () => {
+      try {
+        // replace onTokenChanged with empty function
+        this.authChangedFunctions[tokenChangedFunctionIndex] = () => {};
+      } catch (err) {
+        console.warn(
+          "Unable to unsubscribe onTokenChanged function. Maybe you already did?"
+        );
+      }
+    };
+
+    return unsubscribe;
   }
 
-  public onAuthStateChanged(fn: Function): void {
+  public onAuthStateChanged(fn: Function): Function {
     this.authChangedFunctions.push(fn);
 
     // get index;
@@ -408,7 +424,7 @@ export default class Auth {
       });
     } catch (error) {
       // TODO: if error was 401 Unauthorized => clear refresh token locally.
-      console.log("error refreshing..");
+      console.error("error refreshing..");
       if (error.response?.status === 401) {
         return this.setLoginState(false);
       } else {

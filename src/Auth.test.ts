@@ -5,7 +5,7 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-jest.useFakeTimers();
+jest.useFakeTimers("modern");
 
 it("should register first user", async () => {
   await expect(auth.register("user-1@nhost.io", "password-1")).toResolve();
@@ -78,25 +78,31 @@ it("should not be able to retreive JWT token after logout", () => {
   expect(JWTToken).toBeEmpty();
 });
 
-it("should not be able to retreive JWT claim after logout (should fail)", () => {
-  expect(true).toBe(true);
+it("should not be able to retreive JWT claim after logout", () => {
+  expect(auth.getClaim("x-hasura-user-id")).toBe(undefined);
 });
 
 describe("testing onAuthStateChanged", () => {
-  let authStateChangeTestVar;
+  let authStateVar;
 
-  auth.onAuthStateChanged((d) => {
-    authStateChangeTestVar = d;
+  const unsubscribe = auth.onAuthStateChanged((d) => {
+    authStateVar = d;
   });
 
-  it("should not be able to logout twice", async () => {
+  it("login should set authStateVar to true", async () => {
     await auth.login("user-1@nhost.io", "password-1");
-    expect(authStateChangeTestVar).toBe(true);
+    expect(authStateVar).toBe(true);
   });
 
-  it("authStateChangeTestVar should update to false after logout (should fail)", async () => {
+  it("logout should set authStateVar to false", async () => {
     await auth.logout();
-    expect(authStateChangeTestVar).toBe(false);
+    expect(authStateVar).toBe(false);
+  });
+
+  it("unsubscribe auth state changes, login, authStateVar should be unchanged", async () => {
+    unsubscribe();
+    await auth.login("user-1@nhost.io", "password-1");
+    expect(authStateVar).toBe(false);
   });
 });
 
@@ -108,11 +114,26 @@ describe.skip("Refresh time interval", () => {
 
     const jwt_token = auth.getJWTToken();
 
-    jest.advanceTimersByTime(4000);
+    jest.advanceTimersByTime(960000); // 16 min
 
     const newJWTToken = auth.getJWTToken();
 
     expect(newJWTToken).not.toBe(jwt_token);
+  });
+
+  it("should retreive new jwt token after 3000 seconds based on automatic refresh interval", async () => {
+    jest.useFakeTimers();
+
+    let tokenStateVar = 0;
+    auth.onTokenChanged(() => {
+      tokenStateVar++;
+    });
+
+    await auth.login("user-1@nhost.io", "password-1");
+
+    expect(tokenStateVar).toBe(1);
+    jest.advanceTimersByTime(960000); // 16 min
+    expect(tokenStateVar).toBe(2);
   });
 });
 

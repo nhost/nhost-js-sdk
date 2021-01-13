@@ -25,5 +25,6 @@ export default class JWTMemory {
 
   public clearJWT(): void {
     this.JWTToken = "";
+    this.claims = [];
   }
 }
