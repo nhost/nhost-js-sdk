@@ -312,7 +312,7 @@ export default class Auth {
         cookie: this.useCookies,
       });
     } catch (error) {
-      this.removeItem("nhost:refreshToken");
+      this.removeItem("nhostRefreshToken");
       throw error;
     }
 
@@ -324,7 +324,7 @@ export default class Auth {
 
     // set refresh token
     if (!this.useCookies) {
-      await this.setItem("nhost:refreshToken", res.data.refresh_token);
+      await this.setItem("nhostRefreshToken", res.data.refresh_token);
     }
 
     return {};
@@ -339,7 +339,7 @@ export default class Auth {
         },
         {
           params: {
-            refresh_token: await this.getItem("nhost:refreshToken"),
+            refresh_token: await this.getItem("nhostRefreshToken"),
           },
         }
       );
@@ -349,7 +349,7 @@ export default class Auth {
     }
 
     this.JWTMemory.clearJWT();
-    this.removeItem("nhost:refreshToken");
+    this.removeItem("nhostRefreshToken");
     this.setLoginState(false);
   }
 
@@ -407,7 +407,7 @@ export default class Auth {
 
   private async refreshToken(initRefreshToken: string | null): Promise<void> {
     const refreshToken =
-      initRefreshToken || (await this.getItem("nhost:refreshToken"));
+      initRefreshToken || (await this.getItem("nhostRefreshToken"));
 
     if (!refreshToken) {
       // palce at end of call-stack to let frontend get `null` first (to match SSR)
@@ -434,7 +434,7 @@ export default class Auth {
 
     // set refresh token
     if (!this.useCookies) {
-      await this.setItem("nhost:refreshToken", res.data.refresh_token);
+      await this.setItem("nhostRefreshToken", res.data.refresh_token);
     }
 
     this.setLoginState(true, res.data.jwt_token, res.data.jwt_expires_in);
@@ -565,7 +565,7 @@ export default class Auth {
 
     // set refresh token
     if (!this.useCookies) {
-      await this.setItem("nhost:refreshToken", res.data.refresh_token);
+      await this.setItem("nhostRefreshToken", res.data.refresh_token);
     }
   }
 }
