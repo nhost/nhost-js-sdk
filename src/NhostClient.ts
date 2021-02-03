@@ -5,7 +5,6 @@ import * as types from "./types";
 
 export default class NhostClient {
   private base_url: string | null;
-  private app_initialized: boolean;
   private use_cookies: boolean;
   private refresh_interval_time: number | null;
   private client_storage: types.ClientStorage;
@@ -13,33 +12,28 @@ export default class NhostClient {
   private JWTMemory: JWTMemory;
   private ssr: boolean;
 
-  constructor() {
-    this.base_url = null;
-    this.app_initialized = false;
-    this.use_cookies = false;
-    this.JWTMemory = new JWTMemory();
-  }
+  auth: NhostAuth;
+  storage: NhostStorage;
 
-  public initializeApp(config: types.UserConfig) {
+  constructor(config: types.UserConfig) {
+    if (!config.base_url)
+      throw "The client needs a base_url. Read more here: https://docs.nhost.io/libraries/nhost-js-sdk#setup.";
+
+    this.JWTMemory = new JWTMemory();
     this.base_url = config.base_url;
-    this.app_initialized = true;
     this.use_cookies = config.use_cookies ? config.use_cookies : false;
     this.refresh_interval_time = config.refresh_interval_time || null; // 10 minutes (600 seconds)
     this.ssr = typeof window === "undefined";
+
     this.client_storage = this.ssr
       ? {}
       : config.client_storage || window.localStorage;
+
     this.client_storage_type = config.client_storage_type
       ? config.client_storage_type
       : "web";
-  }
 
-  public auth() {
-    if (!this.app_initialized || !this.base_url) {
-      throw "app is not initialized. Call nhost.initializeApp(config). Read more here: https://docs.nhost.io/libraries/nhost-js-sdk#setup.";
-    }
-
-    const config = {
+    const authConfig = {
       base_url: this.base_url,
       use_cookies: this.use_cookies,
       refresh_interval_time: this.refresh_interval_time,
@@ -47,20 +41,13 @@ export default class NhostClient {
       client_storage_type: this.client_storage_type,
       ssr: this.ssr,
     };
+    this.auth = new NhostAuth(authConfig, this.JWTMemory);
 
-    return new NhostAuth(config, this.JWTMemory);
-  }
-
-  public storage() {
-    if (!this.app_initialized || !this.base_url) {
-      throw "app is not initialized. Call nhost.initializeApp(config). Read more here: https://docs.nhost.io/libraries/nhost-js-sdk#setup.";
-    }
-
-    const config = {
+    const storageConfig = {
       base_url: this.base_url,
       use_cookies: this.use_cookies,
     };
 
-    return new NhostStorage(config, this.JWTMemory);
+    this.storage = new NhostStorage(storageConfig, this.JWTMemory);
   }
 }
