@@ -6,6 +6,13 @@ export interface UserConfig {
   client_storage_type?: string;
 }
 
+export interface NhostUser {
+  id: string;
+  email?: string;
+  display_name?: string;
+  avatar_url?: string;
+}
+
 export interface AuthConfig {
   base_url: string;
   use_cookies: boolean;
