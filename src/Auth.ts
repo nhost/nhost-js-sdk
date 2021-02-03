@@ -16,6 +16,7 @@ export default class Auth {
   private clientStorageType: string;
   private JWTMemory: JWTMemory;
   private ssr: boolean;
+  private refreshTokenLock: boolean;
 
   constructor(config: types.AuthConfig, JWTMemory: JWTMemory) {
     const {
@@ -40,6 +41,7 @@ export default class Auth {
     this.sampleRate = 2000; // check every 2 seconds
     this.JWTMemory = JWTMemory;
     this.ssr = ssr;
+    this.refreshTokenLock = false;
 
     this.httpClient = axios.create({
       baseURL: `${baseURL}/auth`,
@@ -417,19 +419,31 @@ export default class Auth {
 
     let res;
     try {
+      // set lock to avoid two refresh token request being sent at the same time with the same token.
+      // If so, the last request will fail because the first request used the refresh token
+      if (this.refreshTokenLock) {
+        console.debug(
+          "refresh token already in transit. Holding off one request."
+        );
+        return;
+      }
+      this.refreshTokenLock = true;
+
+      // make refresh token request
       res = await this.httpClient.get("/token/refresh", {
         params: {
           refresh_token: refreshToken,
         },
       });
     } catch (error) {
-      // TODO: if error was 401 Unauthorized => clear refresh token locally.
       if (error.response?.status === 401) {
         return await this.logout();
       } else {
-        // silent fail
-        return;
+        return; // silent fail
       }
+    } finally {
+      // release lock
+      this.refreshTokenLock = false;
     }
 
     // set refresh token
