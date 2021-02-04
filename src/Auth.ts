@@ -16,6 +16,7 @@ export default class Auth {
   private client_storage_type: string;
   private JWTMemory: JWTMemory;
   private ssr: boolean;
+  private base_url: string;
 
   constructor(config: types.AuthConfig, JWTMemory: JWTMemory) {
     const {
@@ -27,6 +28,7 @@ export default class Auth {
       ssr,
     } = config;
 
+    this.base_url = base_url;
     this.use_cookies = use_cookies;
     this.refresh_interval_time = refresh_interval_time;
     this.client_storage = client_storage;
@@ -47,7 +49,7 @@ export default class Auth {
       withCredentials: this.use_cookies,
     });
 
-    // get refresh token from query param (from externa OAuth provider callback)
+    // get refresh token from query param (from external OAuth provider callback)
     let refresh_token: string | null = null;
 
     if (!ssr) {
@@ -275,6 +277,8 @@ export default class Auth {
     this.authStateChanged(this.login_state);
   }
 
+  public async user(): Promise<types.NhostUser> {}
+
   public async register(
     email: string,
     password: string,
@@ -291,9 +295,23 @@ export default class Auth {
     }
   }
 
+  /**
+   * 
+   * @param provider 
+   */
+  public async loginOAuth(provider: string) {
+    try {
+      window.location.href = `${this.base_url}/auth/providers/${provider}`
+      return {}
+    } catch (error) {
+      this.removeItem("refresh_token")
+      throw error;
+    }
+  }
+
   public async login(
     email: string,
-    password: string
+    password: string,
   ): Promise<types.LoginData> {
     let res;
     try {
