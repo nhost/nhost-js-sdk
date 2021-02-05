@@ -275,7 +275,7 @@ export default class Auth {
     this.authStateChanged(this.loginState);
   }
 
-  public async user(): Promise<types.NhostUser | null> {
+  public async user(): Promise<types.User | null> {
     if (!this.isAuthenticated()) return null;
 
     return { id: this.getClaim("x-hasura-user-id") };
