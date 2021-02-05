@@ -26,6 +26,7 @@ export default class Auth {
       clientStorage,
       clientStorageType,
       ssr,
+      auto_login,
     } = config;
 
     this.useCookies = useCookies;
@@ -74,7 +75,11 @@ export default class Auth {
 
     refreshToken = refreshToken !== "" ? refreshToken : null;
 
-    this.autoLogin(refreshToken);
+    if (auto_login) {
+      this.autoLogin(refreshToken);
+    } else {
+      this.setItem("nhostRefreshToken", refreshToken);
+    }
   }
 
   private _removeParam(key, sourceURL) {
@@ -237,11 +242,10 @@ export default class Auth {
     // set new loginState
     this.loginState = state;
 
-    if (this.loginState) {
-      const refreshIntervalTime =
-        this.refreshIntervalTime !== null || typeof JWTExpiresIn !== "number"
-          ? this.refreshIntervalTime
-          : Math.max(30 * 1000, JWTExpiresIn - 45000); //45 sec before expires
+    if (this.login_state) {
+      const refreshIntervalTime = this.refreshIntervalTime
+        ? this.refreshIntervalTime
+        : Math.max(30 * 1000, JWTExpiresIn - 45000); //45 sec before expires
 
       // start refresh token interval after logging in
       this.refreshInterval = setInterval(
@@ -269,6 +273,12 @@ export default class Auth {
 
     // call auth state change functions
     this.authStateChanged(this.loginState);
+  }
+
+  public async user(): Promise<types.NhostUser | null> {
+    if (!this.isAuthenticated()) return null;
+
+    return { id: this.getClaim("x-hasura-user-id") };
   }
 
   public async register(
@@ -302,10 +312,16 @@ export default class Auth {
     }
   }
 
-  public async login(
-    email: string,
-    password: string
-  ): Promise<types.LoginData> {
+  public async login({
+    email,
+    password,
+    provider,
+  }: types.loginCredentials): Promise<types.LoginData> {
+    if (provider) {
+      window.location.href = `${this.base_url}/auth/providers/${provider}`;
+      return {};
+    }
+
     let res;
     try {
       res = await this.httpClient.post("/login", {
