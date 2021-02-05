@@ -26,7 +26,7 @@ export default class Auth {
       clientStorage,
       clientStorageType,
       ssr,
-      auto_login,
+      autoLogin,
     } = config;
 
     this.useCookies = useCookies;
@@ -75,7 +75,7 @@ export default class Auth {
 
     refreshToken = refreshToken !== "" ? refreshToken : null;
 
-    if (auto_login) {
+    if (autoLogin) {
       this.autoLogin(refreshToken);
     } else {
       this.setItem("nhostRefreshToken", refreshToken);
