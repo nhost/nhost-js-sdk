@@ -15,7 +15,7 @@ export default class NhostClient {
   auth: NhostAuth;
   storage: NhostStorage;
 
-  constructor(config: types.UserConfig): void {
+  constructor(config: types.UserConfig) {
     if ("base_url" in config) {
       console.error("use `baseURL` instead of `base_url` to initiate nhost");
       return;
