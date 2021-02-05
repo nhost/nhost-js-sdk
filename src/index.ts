@@ -1,8 +1,8 @@
 import NhostClient from "./NhostClient";
-import { UserConfig, NhostUser } from "./types";
+import { UserConfig, User } from "./types";
 
 const createClient = (config: UserConfig) => {
   return new NhostClient(config);
 };
 
-export { NhostClient, createClient, NhostUser };
+export { NhostClient, createClient, User };

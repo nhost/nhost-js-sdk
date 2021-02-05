@@ -40,11 +40,15 @@ it("should not be able to register with a short password", async () => {
 });
 
 it("should not be able to login with wrong password", async () => {
-  await expect(auth.login("user-1@nhost.io", "wrong-password-1")).toReject();
+  await expect(
+    auth.login({ email: "user-1@nhost.io", password: "wrong-password-1" })
+  ).toReject();
 });
 
 it("should not be able to login with wrong password", async () => {
-  await expect(auth.login("user-1@nhost.io", "password-1")).toResolve();
+  await expect(
+    auth.login({ email: "user-1@nhost.io", password: "password-1" })
+  ).toResolve();
 });
 
 it("should be able to retreive JWT Token", async () => {
@@ -90,7 +94,7 @@ describe("testing onAuthStateChanged", () => {
   });
 
   it("login should set authStateVar to true", async () => {
-    await auth.login("user-1@nhost.io", "password-1");
+    await auth.login({ email: "user-1@nhost.io", password: "password-1" });
     expect(authStateVar).toBe(true);
   });
 
@@ -101,7 +105,7 @@ describe("testing onAuthStateChanged", () => {
 
   it("unsubscribe auth state changes, login, authStateVar should be unchanged", async () => {
     unsubscribe();
-    await auth.login("user-1@nhost.io", "password-1");
+    await auth.login({ email: "user-1@nhost.io", password: "password-1" });
     expect(authStateVar).toBe(false);
   });
 });
@@ -110,7 +114,7 @@ describe.skip("Refresh time interval", () => {
   it("should retreive new jwt token after 3000 seconds based on automatic refresh interval", async () => {
     jest.useFakeTimers();
 
-    await auth.login("user-1@nhost.io", "password-1");
+    await auth.login({ email: "user-1@nhost.io", password: "password-1" });
 
     const jwt_token = auth.getJWTToken();
 
@@ -129,7 +133,7 @@ describe.skip("Refresh time interval", () => {
       tokenStateVar++;
     });
 
-    await auth.login("user-1@nhost.io", "password-1");
+    await auth.login({ email: "user-1@nhost.io", password: "password-1" });
 
     expect(tokenStateVar).toBe(1);
     jest.advanceTimersByTime(960000); // 16 min
@@ -140,12 +144,14 @@ describe.skip("Refresh time interval", () => {
 describe("password change", () => {
   it("Should be able to logout and login", async () => {
     auth.logout();
-    await expect(auth.login("user-1@nhost.io", "password-1")).toResolve();
+    await expect(
+      auth.login({ email: "user-1@nhost.io", password: "password-1" })
+    ).toResolve();
   });
 
   it("should be able to change password", async () => {
     auth.logout();
-    await auth.login("user-1@nhost.io", "password-1");
+    await auth.login({ email: "user-1@nhost.io", password: "password-1" });
     await expect(
       auth.changePassword("password-1", "password-1-new")
     ).toResolve();
@@ -153,6 +159,8 @@ describe("password change", () => {
 
   it("should be able to logout and login with new password", async () => {
     auth.logout();
-    await expect(auth.login("user-1@nhost.io", "password-1-new")).toResolve();
+    await expect(
+      auth.login({ email: "user-1@nhost.io", password: "password-1-new" })
+    ).toResolve();
   });
 });

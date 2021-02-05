@@ -105,7 +105,8 @@ export default class Auth {
 
   private async setItem(key: string, value: string): Promise<void> {
     if (typeof value !== "string") {
-      return console.error(`value is not of type "string"`);
+      console.error(`value is not of type "string"`);
+      return;
     }
 
     switch (this.clientStorageType) {
