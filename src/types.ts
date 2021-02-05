@@ -55,10 +55,20 @@ export interface Headers {
   Authorization?: string;
 }
 
+export type Provider =
+  | "apple"
+  | "facebook"
+  | "github"
+  | "google"
+  | "linkedin"
+  | "spotify"
+  | "twitter"
+  | "windowslive";
+
 export interface loginCredentials {
   email?: string;
   password?: string;
-  provider?: string;
+  provider?: Provider;
 }
 
 export interface Session {
