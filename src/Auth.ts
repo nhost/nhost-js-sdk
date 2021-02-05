@@ -26,6 +26,7 @@ export default class Auth {
       client_storage,
       client_storage_type,
       ssr,
+      auto_login,
     } = config;
 
     this.base_url = base_url;
@@ -77,7 +78,11 @@ export default class Auth {
 
     refresh_token = refresh_token !== "" ? refresh_token : null;
 
-    this.autoLogin(refresh_token);
+    if (auto_login) {
+      this.autoLogin(refresh_token);
+    } else {
+      this.setItem("refresh_token", refresh_token);
+    }
   }
 
   private _removeParam(key, sourceURL) {
@@ -243,11 +248,9 @@ export default class Auth {
     this.login_state = state;
 
     if (this.login_state) {
-      const refresh_interval_time =
-        this.refresh_interval_time !== null ||
-        typeof jwt_expires_in !== "number"
-          ? this.refresh_interval_time
-          : Math.max(30 * 1000, jwt_expires_in - 45000); //45 sec before expires
+      const refresh_interval_time = this.refresh_interval_time
+        ? this.refresh_interval_time
+        : Math.max(30 * 1000, jwt_expires_in - 45000); //45 sec before expires
 
       // start refresh token interval after logging in
       this.refresh_interval = setInterval(
@@ -277,7 +280,11 @@ export default class Auth {
     this.authStateChanged(this.login_state);
   }
 
-  public async user(): Promise<types.NhostUser> {}
+  public async user(): Promise<types.NhostUser | null> {
+    if (!this.isAuthenticated()) return null;
+
+    return { id: this.getClaim("x-hasura-user-id") };
+  }
 
   public async register(
     email: string,
@@ -295,24 +302,16 @@ export default class Auth {
     }
   }
 
-  /**
-   * 
-   * @param provider 
-   */
-  public async loginOAuth(provider: string) {
-    try {
-      window.location.href = `${this.base_url}/auth/providers/${provider}`
-      return {}
-    } catch (error) {
-      this.removeItem("refresh_token")
-      throw error;
+  public async login({
+    email,
+    password,
+    provider,
+  }: types.loginCredentials): Promise<types.LoginData> {
+    if (provider) {
+      window.location.href = `${this.base_url}/auth/providers/${provider}`;
+      return {};
     }
-  }
 
-  public async login(
-    email: string,
-    password: string,
-  ): Promise<types.LoginData> {
     let res;
     try {
       res = await this.http_client.post("/login", {

@@ -6,13 +6,6 @@ export interface UserConfig {
   client_storage_type?: string;
 }
 
-export interface NhostUser {
-  id: string;
-  email?: string;
-  display_name?: string;
-  avatar_url?: string;
-}
-
 export interface AuthConfig {
   base_url: string;
   use_cookies: boolean;
@@ -60,4 +53,24 @@ export interface LoginData {
 
 export interface Headers {
   Authorization?: string;
+}
+
+export interface loginCredentials {
+  email?: string;
+  password?: string;
+  provider?: string;
+}
+
+export interface Session {
+  jwt_token: string;
+  jwt_expires_in: number;
+  refresh_token?: string; // not present if useCookie
+  user: User;
+}
+
+export interface User {
+  id: string;
+  email?: string;
+  display_name?: string;
+  avatar_url?: string;
 }
