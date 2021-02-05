@@ -318,7 +318,7 @@ export default class Auth {
     provider,
   }: types.loginCredentials): Promise<types.LoginData> {
     if (provider) {
-      window.location.href = `${this.base_url}/auth/providers/${provider}`;
+      window.location.href = `${this.baseURL}/auth/providers/${provider}`;
       return {};
     }
 
@@ -428,7 +428,7 @@ export default class Auth {
       initRefreshToken || (await this.getItem("nhostRefreshToken"));
 
     if (!refreshToken) {
-      // palce at end of call-stack to let frontend get `null` first (to match SSR)
+      // place at end of call-stack to let frontend get `null` first (to match SSR)
       setTimeout(() => this.setLoginState(false), 0);
       return;
     }
@@ -438,10 +438,9 @@ export default class Auth {
       // set lock to avoid two refresh token request being sent at the same time with the same token.
       // If so, the last request will fail because the first request used the refresh token
       if (this.refreshTokenLock) {
-        console.debug(
-          "refresh token already in transit. Holding off one request."
+        return console.debug(
+          "refresh token already in transit. Halting this request."
         );
-        return;
       }
       this.refreshTokenLock = true;
 

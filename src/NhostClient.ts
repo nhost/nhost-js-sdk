@@ -15,7 +15,19 @@ export default class NhostClient {
   auth: NhostAuth;
   storage: NhostStorage;
 
-  constructor(config: types.UserConfig) {
+  constructor(config: types.UserConfig): void {
+    if ("base_url" in config) {
+      console.error("use `baseURL` instead of `base_url` to initiate nhost");
+      return;
+    }
+
+    if ("baseUrl" in config) {
+      console.error(
+        "use `baseURL` (URL is uppercase) instead of `baseUrl` to initiate nhost"
+      );
+      return;
+    }
+
     if (!config.baseURL)
       throw "The client needs a baseURL. Read more here: https://docs.nhost.io/libraries/nhost-js-sdk#setup.";
 
