@@ -4,6 +4,7 @@ export interface UserConfig {
   refreshIntervalTime?: number | null;
   clientStorage?: ClientStorage;
   clientStorageType?: string;
+  autoLogin?: boolean;
 }
 
 export interface AuthConfig {
@@ -13,6 +14,7 @@ export interface AuthConfig {
   clientStorage: ClientStorage;
   clientStorageType: string;
   ssr?: boolean;
+  autoLogin: boolean;
 }
 
 export interface StorageConfig {
@@ -70,17 +72,16 @@ export interface loginCredentials {
   password?: string;
   provider?: Provider;
 }
-
 export interface Session {
-  jwt_token: string;
-  jwt_expires_in: number;
-  refresh_token?: string; // not present if useCookie
+  jwtToken: string;
+  jwtExpiresIn: number;
+  refreshToken?: string; // not present if useCookie
   user: User;
 }
 
 export interface User {
   id: string;
   email?: string;
-  display_name?: string;
-  avatar_url?: string;
+  displayName?: string;
+  avatarUrl?: string;
 }

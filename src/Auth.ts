@@ -17,6 +17,7 @@ export default class Auth {
   private JWTMemory: JWTMemory;
   private ssr: boolean;
   private refreshTokenLock: boolean;
+  private baseURL: string;
 
   constructor(config: types.AuthConfig, JWTMemory: JWTMemory) {
     const {
@@ -43,14 +44,15 @@ export default class Auth {
     this.JWTMemory = JWTMemory;
     this.ssr = ssr;
     this.refreshTokenLock = false;
+    this.baseURL = baseURL;
 
     this.httpClient = axios.create({
-      baseURL: `${baseURL}/auth`,
+      baseURL: `${this.baseURL}/auth`,
       timeout: 10000,
       withCredentials: this.useCookies,
     });
 
-    // get refresh token from query param (from externa OAuth provider callback)
+    // get refresh token from query param (from external OAuth provider callback)
     let refreshToken: string | null = null;
 
     if (!ssr) {
@@ -211,10 +213,8 @@ export default class Auth {
   private generateHeaders(): null | types.Headers {
     if (this.useCookies) return null;
 
-    const jwt_token = this.JWTMemory.getJWT();
-
     return {
-      Authorization: `Bearer ${jwt_token}`,
+      Authorization: `Bearer ${this.JWTMemory.getJWT()}`,
     };
   }
 
@@ -222,6 +222,7 @@ export default class Auth {
     if (this.ssr) {
       return this.setLoginState(null);
     }
+
     this.refreshToken(refreshToken);
   }
 
@@ -243,7 +244,7 @@ export default class Auth {
     // set new loginState
     this.loginState = state;
 
-    if (this.login_state) {
+    if (this.loginState) {
       const refreshIntervalTime = this.refreshIntervalTime
         ? this.refreshIntervalTime
         : Math.max(30 * 1000, JWTExpiresIn - 45000); //45 sec before expires
@@ -276,7 +277,7 @@ export default class Auth {
     this.authStateChanged(this.loginState);
   }
 
-  public async user(): Promise<types.User | null> {
+  public user(): types.User | null {
     if (!this.isAuthenticated()) return null;
 
     return { id: this.getClaim("x-hasura-user-id") };
@@ -301,8 +302,9 @@ export default class Auth {
           }
         : undefined;
 
+    let res;
     try {
-      await this.httpClient.post("/register", {
+      res = await this.httpClient.post("/register", {
         email,
         password,
         user_data: userData,
@@ -311,16 +313,18 @@ export default class Auth {
     } catch (error) {
       throw error;
     }
+
+    return { data: res.data, user: res.data.user };
   }
 
   public async login({
     email,
     password,
     provider,
-  }: types.loginCredentials): Promise<types.LoginData> {
+  }: types.loginCredentials): Promise<types.Session> {
     if (provider) {
       window.location.href = `${this.baseURL}/auth/providers/${provider}`;
-      return {};
+      return { data: null, user: null };
     }
 
     let res;
@@ -346,7 +350,7 @@ export default class Auth {
       await this.setItem("nhostRefreshToken", res.data.refresh_token);
     }
 
-    return {};
+    return { data: res.data, user: res.data.user };
   }
 
   public async logout(all: boolean = false): Promise<void> {
@@ -424,7 +428,11 @@ export default class Auth {
     return this.JWTMemory.getClaim(claim);
   }
 
-  private async refreshToken(initRefreshToken: string | null): Promise<void> {
+  public async refreshSession(): Promise<void> {
+    return await this.refreshToken();
+  }
+
+  private async refreshToken(initRefreshToken?: string | null): Promise<void> {
     const refreshToken =
       initRefreshToken || (await this.getItem("nhostRefreshToken"));
 

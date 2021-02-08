@@ -4,13 +4,14 @@ import JWTMemory from "./JWTMemory";
 import * as types from "./types";
 
 export default class NhostClient {
-  private baseURL: string | null;
+  private baseURL: string;
   private useCookies: boolean;
   private refreshIntervalTime: number | null;
   private clientStorage: types.ClientStorage;
   private clientStorageType: string;
   private JWTMemory: JWTMemory;
   private ssr: boolean;
+  private autoLogin: boolean;
 
   auth: NhostAuth;
   storage: NhostStorage;
@@ -33,7 +34,6 @@ export default class NhostClient {
 
     this.JWTMemory = new JWTMemory();
     this.baseURL = config.baseURL;
-    this.useCookies = config.useCookies ? config.useCookies : false;
     this.refreshIntervalTime = config.refreshIntervalTime || null; // 10 minutes (600 seconds)
     this.ssr = typeof window === "undefined";
 
@@ -45,6 +45,9 @@ export default class NhostClient {
       ? config.clientStorageType
       : "web";
 
+    this.useCookies = config.useCookies ?? false;
+    this.autoLogin = config.autoLogin ?? true
+
     const authConfig = {
       baseURL: this.baseURL,
       useCookies: this.useCookies,
@@ -52,6 +55,7 @@ export default class NhostClient {
       clientStorage: this.clientStorage,
       clientStorageType: this.clientStorageType,
       ssr: this.ssr,
+      autoLogin: this.autoLogin,
     };
     this.auth = new NhostAuth(authConfig, this.JWTMemory);
 
