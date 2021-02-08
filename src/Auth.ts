@@ -77,7 +77,7 @@ export default class Auth {
 
     if (autoLogin) {
       this.autoLogin(refreshToken);
-    } else {
+    } else if (refreshToken) {
       this.setItem("nhostRefreshToken", refreshToken);
     }
   }
