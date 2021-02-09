@@ -67,7 +67,7 @@ export type Provider =
   | "twitter"
   | "windowslive";
 
-export interface registerCredentials {
+export interface registerParameters {
   email: string;
   password: string;
   registrationOptions: {
