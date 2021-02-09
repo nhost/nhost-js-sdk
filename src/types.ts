@@ -67,6 +67,16 @@ export type Provider =
   | "twitter"
   | "windowslive";
 
+export interface registerCredentials {
+  email: string;
+  password: string;
+  registrationOptions: {
+    userData?: any;
+    defaultRole?: string;
+    allowedRoles?: string[];
+  };
+}
+
 export interface loginCredentials {
   email?: string;
   password?: string;

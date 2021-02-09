@@ -283,15 +283,11 @@ export default class Auth {
     return { id: this.getClaim("x-hasura-user-id") };
   }
 
-  public async register(
-    email: string,
-    password: string,
-    registrationOptions: {
-      userData?: any;
-      defaultRole?: string;
-      allowedRoles?: string[];
-    } = {}
-  ): Promise<void> {
+  public async register({
+    email,
+    password,
+    registrationOptions,
+  }: types.registerParameters): Promise<void> {
     const { userData, defaultRole, allowedRoles } = registrationOptions;
 
     const registerOptions =
