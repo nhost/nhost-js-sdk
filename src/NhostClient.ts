@@ -35,18 +35,19 @@ export default class NhostClient {
     this.JWTMemory = new JWTMemory();
     this.baseURL = config.baseURL;
     this.refreshIntervalTime = config.refreshIntervalTime || null; // 10 minutes (600 seconds)
-    this.ssr = typeof window === "undefined";
+    this.ssr = config.ssr ?? typeof window === "undefined";
 
-    this.clientStorage = this.ssr
-      ? {}
-      : config.clientStorage || window.localStorage;
+    this.clientStorage =
+      this.ssr || !config.clientStorage
+        ? {}
+        : config.clientStorage || window.localStorage;
 
     this.clientStorageType = config.clientStorageType
       ? config.clientStorageType
       : "web";
 
     this.useCookies = config.useCookies ?? false;
-    this.autoLogin = config.autoLogin ?? true
+    this.autoLogin = config.autoLogin ?? true;
 
     const authConfig = {
       baseURL: this.baseURL,

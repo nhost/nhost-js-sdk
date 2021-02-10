@@ -5,6 +5,7 @@ export interface UserConfig {
   clientStorage?: ClientStorage;
   clientStorageType?: string;
   autoLogin?: boolean;
+  ssr?: boolean;
 }
 
 export interface AuthConfig {
