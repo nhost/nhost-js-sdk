@@ -68,31 +68,30 @@ export type Provider =
   | "twitter"
   | "windowslive";
 
-export interface registerParameters {
-  email: string;
-  password: string;
-  registrationOptions: {
-    userData?: any;
-    defaultRole?: string;
-    allowedRoles?: string[];
-  };
-}
-
 export interface loginCredentials {
   email?: string;
   password?: string;
   provider?: Provider;
 }
+export interface registerCredentials {
+  email: string;
+  password: string;
+  registrationOptions?: {
+    userData?: any;
+    defaultRole?: string;
+    allowedRoles?: string[];
+  };
+}
 export interface Session {
-  jwtToken: string;
-  jwtExpiresIn: number;
-  refreshToken?: string; // not present if useCookie
+  jwt_token: string;
+  jwt_expires_in: number;
+  refresh_token?: string; // not present if useCookie
   user: User;
 }
 
 export interface User {
   id: string;
   email?: string;
-  displayName?: string;
-  avatarUrl?: string;
+  display_name?: string;
+  avatar_url?: string;
 }

@@ -1,6 +1,6 @@
 import NhostAuth from "./Auth";
 import NhostStorage from "./Storage";
-import JWTMemory from "./JWTMemory";
+import UserSession from "./UserSession";
 import * as types from "./types";
 
 export default class NhostClient {
@@ -9,9 +9,9 @@ export default class NhostClient {
   private refreshIntervalTime: number | null;
   private clientStorage: types.ClientStorage;
   private clientStorageType: string;
-  private JWTMemory: JWTMemory;
   private ssr: boolean;
   private autoLogin: boolean;
+  private session: UserSession
 
   auth: NhostAuth;
   storage: NhostStorage;
@@ -32,15 +32,15 @@ export default class NhostClient {
     if (!config.baseURL)
       throw "The client needs a baseURL. Read more here: https://docs.nhost.io/libraries/nhost-js-sdk#setup.";
 
-    this.JWTMemory = new JWTMemory();
+    // this.JWTMemory = new JWTMemory();
+    this.session = new UserSession(); 
     this.baseURL = config.baseURL;
     this.refreshIntervalTime = config.refreshIntervalTime || null; // 10 minutes (600 seconds)
     this.ssr = config.ssr ?? typeof window === "undefined";
 
-    this.clientStorage =
-      this.ssr || !config.clientStorage
-        ? {}
-        : config.clientStorage || window.localStorage;
+    this.clientStorage = this.ssr
+      ? {}
+      : config.clientStorage || window.localStorage;
 
     this.clientStorageType = config.clientStorageType
       ? config.clientStorageType
@@ -58,13 +58,14 @@ export default class NhostClient {
       ssr: this.ssr,
       autoLogin: this.autoLogin,
     };
-    this.auth = new NhostAuth(authConfig, this.JWTMemory);
+    // this.auth = new NhostAuth(authConfig, this.JWTMemory);
+    this.auth = new NhostAuth(authConfig, this.session);
 
     const storageConfig = {
       baseURL: this.baseURL,
       useCookies: this.useCookies,
     };
 
-    this.storage = new NhostStorage(storageConfig, this.JWTMemory);
+    this.storage = new NhostStorage(storageConfig, this.session);
   }
 }

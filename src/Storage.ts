@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import * as types from "./types";
-import JWTMemory from "./JWTMemory";
+import UserSession from "./UserSession";
 import {
   StringFormat,
   base64Bytes,
@@ -11,11 +11,11 @@ import Blob from "node-blob";
 
 export default class Storage {
   private httpClient: AxiosInstance;
-  private JWTMemory: JWTMemory;
   private useCookies: boolean;
+  private currentSession: UserSession;
 
-  constructor(config: types.StorageConfig, JWTMemory: JWTMemory) {
-    this.JWTMemory = JWTMemory;
+  constructor(config: types.StorageConfig, session: UserSession) {
+    this.currentSession = session;
     this.useCookies = config.useCookies;
 
     this.httpClient = axios.create({
@@ -28,7 +28,7 @@ export default class Storage {
   private generateAuthorizationHeader(): null | types.Headers {
     if (this.useCookies) return null;
 
-    const JWTToken = this.JWTMemory.getJWT();
+    const JWTToken = this.currentSession.getSession()?.jwt_token;
 
     if (JWTToken) {
       return {
