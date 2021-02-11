@@ -133,8 +133,9 @@ export default class Auth {
   }: types.loginCredentials): Promise<{
     session: types.Session | null;
     user: types.User | null;
-    mfa?: boolean;
-    ticket?: string;
+    mfa?: {
+      ticket: string;
+    };
   }> {
     if (provider) {
       window.location.href = `${this.baseURL}/auth/providers/${provider}`;
@@ -154,7 +155,7 @@ export default class Auth {
     }
 
     if ("mfa" in res.data) {
-      return { session: null, user: null, ...res.data };
+      return { session: null, user: null, mfa: { ticket: res.data.ticket } };
     }
 
     this._setSession(res.data);
