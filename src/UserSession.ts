@@ -13,8 +13,10 @@ export default class UserSession {
   public setSession(session: Session) {
     this.session = session;
 
-    const jwtTokenDecoded: JWTClaims = jwt_decode(session.jwt_token);
-    this.claims = jwtTokenDecoded["https://hasura.io/jwt/claims"];
+    if (session.jwt_token) {
+      const jwtTokenDecoded: JWTClaims = jwt_decode(session.jwt_token);
+      this.claims = jwtTokenDecoded["https://hasura.io/jwt/claims"];
+    }
   }
 
   public clearSession() {
