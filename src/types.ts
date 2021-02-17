@@ -27,7 +27,7 @@ export interface ClientStorage {
   // localStorage
   // AsyncStorage
   // https://react-native-community.github.io/async-storage/docs/usage
-  setItem?: (key: string, value: unknown) => void;
+  setItem?: (key: string, value: string) => void;
   getItem?: (key: string) => any;
   removeItem?: (key: string) => void;
 
@@ -94,4 +94,17 @@ export interface User {
   email?: string;
   display_name?: string;
   avatar_url?: string;
+}
+export interface JWTHasuraClaims {
+  [claim: string]: string | string[];
+  "x-hasura-allowed-roles" : string[];
+  "x-hasura-default-role": string;
+  "x-hasura-user-id": string;
+}
+
+// https://hasura.io/docs/1.0/graphql/core/auth/authentication/jwt.html#the-spec
+export interface JWTClaims {
+  sub?: string;
+  iat?: number;
+  "https://hasura.io/jwt/claims": JWTHasuraClaims;
 }

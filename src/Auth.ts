@@ -150,7 +150,7 @@ export default class Auth {
         cookie: this.useCookies,
       });
     } catch (error) {
-      this._setSession(null);
+      this._resetSession();
       throw error;
     }
 
@@ -186,7 +186,7 @@ export default class Auth {
       // noop
     }
 
-    this._setSession(null);
+    this._resetSession();
 
     return { session: null, user: null };
   }
@@ -498,7 +498,7 @@ export default class Auth {
     refreshToken: string = this.currentSession?.refresh_token
   ): void {
     if (this.ssr) {
-      return this._setSession(null);
+      return this._resetSession();
     }
 
     this._refreshToken(refreshToken);
@@ -510,7 +510,7 @@ export default class Auth {
 
     if (!refreshToken) {
       // place at end of call-stack to let frontend get `null` first (to match SSR)
-      setTimeout(() => this._setSession(null), 0);
+      setTimeout(() => this._resetSession(), 0);
       return;
     }
 
@@ -559,17 +559,17 @@ export default class Auth {
     }
   }
 
-  private async _setSession(session: types.Session | null) {
+  private async _resetSession() {
+    clearInterval(this.refreshInterval);
+    clearInterval(this.refreshSleepCheckInterval);
+
+    this.currentSession.resetSession();
+    this._removeItem("nhostRefreshToken");
+  }
+
+  private async _setSession(session: types.Session) {
     this.currentSession.setSession(session);
     this.currentUser = session?.user ?? null;
-
-    if (!session) {
-      clearInterval(this.refreshInterval);
-      clearInterval(this.refreshSleepCheckInterval);
-      this._removeItem("nhostRefreshToken");
-
-      return;
-    }
 
     if (!this.useCookies) {
       await this._setItem("nhostRefreshToken", session.refresh_token);

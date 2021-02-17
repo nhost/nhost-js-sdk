@@ -17,26 +17,13 @@ export default class NhostClient {
   storage: NhostStorage;
 
   constructor(config: types.UserConfig) {
-    if ("base_url" in config) {
-      console.error("use `baseURL` instead of `base_url` to initiate nhost");
-      return;
-    }
-
-    if ("baseUrl" in config) {
-      console.error(
-        "use `baseURL` (URL is uppercase) instead of `baseUrl` to initiate nhost"
-      );
-      return;
-    }
-
     if (!config.baseURL)
-      throw "The client needs a baseURL. Read more here: https://docs.nhost.io/libraries/nhost-js-sdk#setup.";
+      throw "Please specify a baseURL. More information at https://docs.nhost.io/libraries/nhost-js-sdk#setup.";
 
-    // this.JWTMemory = new JWTMemory();
-    this.session = new UserSession(); 
     this.baseURL = config.baseURL;
-    this.refreshIntervalTime = config.refreshIntervalTime || null; // 10 minutes (600 seconds)
     this.ssr = config.ssr ?? typeof window === "undefined";
+    this.session = new UserSession(); 
+    this.refreshIntervalTime = config.refreshIntervalTime || null; // 10 minutes (600 seconds)
 
     this.clientStorage = this.ssr
       ? {}
