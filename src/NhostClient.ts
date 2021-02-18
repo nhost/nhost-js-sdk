@@ -11,7 +11,7 @@ export default class NhostClient {
   private clientStorageType: string;
   private ssr: boolean;
   private autoLogin: boolean;
-  private session: UserSession
+  private session: UserSession;
 
   auth: NhostAuth;
   storage: NhostStorage;
@@ -22,7 +22,10 @@ export default class NhostClient {
 
     this.baseURL = config.baseURL;
     this.ssr = config.ssr ?? typeof window === "undefined";
-    this.session = new UserSession(); 
+    this.useCookies = config.useCookies ?? false;
+    this.autoLogin = config.autoLogin ?? true;
+
+    this.session = new UserSession();
     this.refreshIntervalTime = config.refreshIntervalTime || null; // 10 minutes (600 seconds)
 
     this.clientStorage = this.ssr
@@ -33,26 +36,26 @@ export default class NhostClient {
       ? config.clientStorageType
       : "web";
 
-    this.useCookies = config.useCookies ?? false;
-    this.autoLogin = config.autoLogin ?? true;
+    this.auth = new NhostAuth(
+      {
+        baseURL: this.baseURL,
+        useCookies: this.useCookies,
+        refreshIntervalTime: this.refreshIntervalTime,
+        clientStorage: this.clientStorage,
+        clientStorageType: this.clientStorageType,
+        ssr: this.ssr,
+        autoLogin: this.autoLogin,
+      },
+      this.session
+    );
+    // this.auth = new NhostAuth(authConfig, this.session);
 
-    const authConfig = {
-      baseURL: this.baseURL,
-      useCookies: this.useCookies,
-      refreshIntervalTime: this.refreshIntervalTime,
-      clientStorage: this.clientStorage,
-      clientStorageType: this.clientStorageType,
-      ssr: this.ssr,
-      autoLogin: this.autoLogin,
-    };
-    // this.auth = new NhostAuth(authConfig, this.JWTMemory);
-    this.auth = new NhostAuth(authConfig, this.session);
-
-    const storageConfig = {
-      baseURL: this.baseURL,
-      useCookies: this.useCookies,
-    };
-
-    this.storage = new NhostStorage(storageConfig, this.session);
+    this.storage = new NhostStorage(
+      {
+        baseURL: this.baseURL,
+        useCookies: this.useCookies,
+      },
+      this.session
+    );
   }
 }

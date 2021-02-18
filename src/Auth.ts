@@ -20,6 +20,7 @@ export default class Auth {
   private baseURL: string;
   private currentUser: types.User | null;
   private currentSession: UserSession;
+  private loading: boolean;
 
   constructor(config: types.AuthConfig, session: UserSession) {
     const {
@@ -45,6 +46,7 @@ export default class Auth {
     this.ssr = ssr;
     this.refreshTokenLock = false;
     this.baseURL = baseURL;
+    this.loading = true;
 
     this.currentUser = null;
     this.currentSession = session;
@@ -150,7 +152,7 @@ export default class Auth {
         cookie: this.useCookies,
       });
     } catch (error) {
-      this._resetSession();
+      this._clearSession();
       throw error;
     }
 
@@ -186,7 +188,7 @@ export default class Auth {
       // noop
     }
 
-    this._resetSession();
+    this._clearSession();
 
     return { session: null, user: null };
   }
@@ -232,6 +234,7 @@ export default class Auth {
   }
 
   public isAuthenticated(): boolean | null {
+    if (this.loading) return null;
     return this.currentSession.getSession() !== null;
   }
 
@@ -498,7 +501,7 @@ export default class Auth {
     refreshToken: string = this.currentSession?.refresh_token
   ): void {
     if (this.ssr) {
-      return this._resetSession();
+      return this._clearSession();
     }
 
     this._refreshToken(refreshToken);
@@ -510,7 +513,11 @@ export default class Auth {
 
     if (!refreshToken) {
       // place at end of call-stack to let frontend get `null` first (to match SSR)
-      setTimeout(() => this._resetSession(), 0);
+      setTimeout(() => {
+        this._clearSession();
+      }, 0);
+
+      this.loading = false;
       return;
     }
 
@@ -543,7 +550,7 @@ export default class Auth {
     }
 
     this._setSession(res.data);
-
+    this.loading = false;
     this.tokenChanged();
   }
 
@@ -559,17 +566,17 @@ export default class Auth {
     }
   }
 
-  private async _resetSession() {
+  private async _clearSession() {
     clearInterval(this.refreshInterval);
     clearInterval(this.refreshSleepCheckInterval);
 
-    this.currentSession.resetSession();
+    this.currentSession.clearSession();
     this._removeItem("nhostRefreshToken");
   }
 
   private async _setSession(session: types.Session) {
     this.currentSession.setSession(session);
-    this.currentUser = session?.user ?? null;
+    this.currentUser = session.user;
 
     if (!this.useCookies) {
       await this._setItem("nhostRefreshToken", session.refresh_token);
