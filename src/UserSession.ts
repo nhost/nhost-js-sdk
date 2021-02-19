@@ -17,7 +17,7 @@ export default class UserSession {
     this.claims = jwtTokenDecoded["https://hasura.io/jwt/claims"];
   }
 
-  public resetSession() {
+  public clearSession() {
     this.session = null;
     this.claims = null;
   }

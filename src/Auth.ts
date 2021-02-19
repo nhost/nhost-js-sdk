@@ -1,4 +1,3 @@
-// @ts-nocheck
 import axios, { AxiosInstance } from "axios";
 import queryString from "query-string";
 import * as types from "./types";
@@ -15,12 +14,15 @@ export default class Auth {
   private clientStorage: types.ClientStorage;
   private clientStorageType: string;
 
-  private ssr: boolean;
+  private ssr: boolean | undefined;
   private refreshTokenLock: boolean;
   private baseURL: string;
   private currentUser: types.User | null;
   private currentSession: UserSession;
   private loading: boolean;
+  private refreshSleepCheckInterval: any;
+  private refreshIntervalSleepCheckLastSample: number;
+  private sampleRate: number;
 
   constructor(config: types.AuthConfig, session: UserSession) {
     const {
@@ -40,10 +42,12 @@ export default class Auth {
     this.tokenChangedFunctions = [];
     this.authChangedFunctions = [];
     this.refreshInterval;
-    this.refreshSleepCheckInterval;
-    this.refreshIntervalSleepCheckLastSample;
+
+    this.refreshSleepCheckInterval = 0;
+    this.refreshIntervalSleepCheckLastSample = Date.now();
     this.sampleRate = 2000; // check every 2 seconds
     this.ssr = ssr;
+
     this.refreshTokenLock = false;
     this.baseURL = baseURL;
     this.loading = true;
@@ -80,7 +84,8 @@ export default class Auth {
       }
     }
 
-    refreshToken = refreshToken !== "" ? refreshToken : null;
+    // if empty string, then set it to null
+    refreshToken = refreshToken ? refreshToken : null;
 
     if (autoLogin) {
       this._autoLogin(refreshToken);
@@ -96,7 +101,7 @@ export default class Auth {
   public async register({
     email,
     password,
-    registrationOptions,
+    registrationOptions = {},
   }: types.registerCredentials): Promise<{
     session: types.Session;
     user: types.User;
@@ -242,7 +247,7 @@ export default class Auth {
     return this.currentSession.getSession()?.jwt_token || null;
   }
 
-  public getClaim(claim: string): string | string[] {
+  public getClaim(claim: string): string | string[] | null {
     return this.currentSession.getClaim(claim);
   }
 
@@ -351,7 +356,13 @@ export default class Auth {
     );
   }
 
-  public async MFATotp(code: string, ticket: string): Promise<void> {
+  public async MFATotp(
+    code: string,
+    ticket: string
+  ): Promise<{
+    session: types.Session;
+    user: types.User;
+  }> {
     const res = await this.httpClient.post("/mfa/totp", {
       code,
       ticket,
@@ -363,7 +374,7 @@ export default class Auth {
     return { session: res.data, user: res.data.user };
   }
 
-  private _removeParam(key, sourceURL) {
+  private _removeParam(key: string, sourceURL: string) {
     var rtn = sourceURL.split("?")[0],
       param,
       params_arr = [],
@@ -493,15 +504,14 @@ export default class Auth {
     if (this.useCookies) return null;
 
     return {
-      Authorization: `Bearer ${this.currentSession?.jwt_token}`,
+      Authorization: `Bearer ${this.currentSession.getSession()?.jwt_token}`,
     };
   }
 
-  private _autoLogin(
-    refreshToken: string = this.currentSession?.refresh_token
-  ): void {
+  private _autoLogin(refreshToken: string | null): void {
     if (this.ssr) {
-      return this._clearSession();
+      this._clearSession();
+      return;
     }
 
     this._refreshToken(refreshToken);
@@ -540,7 +550,8 @@ export default class Auth {
       });
     } catch (error) {
       if (error.response?.status === 401) {
-        return await this.logout();
+        await this.logout();
+        return
       } else {
         return; // silent fail
       }
@@ -566,7 +577,7 @@ export default class Auth {
     }
   }
 
-  private async _clearSession() {
+  private async _clearSession(): Promise<void> {
     clearInterval(this.refreshInterval);
     clearInterval(this.refreshSleepCheckInterval);
 
@@ -578,7 +589,7 @@ export default class Auth {
     this.currentSession.setSession(session);
     this.currentUser = session.user;
 
-    if (!this.useCookies) {
+    if (!this.useCookies && session.refresh_token) {
       await this._setItem("nhostRefreshToken", session.refresh_token);
     }
 
