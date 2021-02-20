@@ -121,6 +121,7 @@ export default class Auth {
       res = await this.httpClient.post("/register", {
         email,
         password,
+        cookie: this.useCookies,
         user_data: userData,
         register_options: registerOptions,
       });
