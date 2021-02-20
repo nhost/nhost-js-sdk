@@ -1,38 +1,38 @@
-import jwt_decode from "jwt-decode";
-import { Session, JWTClaims, JWTHasuraClaims } from "./types";
+import jwt_decode from 'jwt-decode'
+import { Session, JWTClaims, JWTHasuraClaims } from './types'
 
 export default class UserSession {
-  private session: Session | null;
-  private claims: JWTHasuraClaims | null;
+  private session: Session | null
+  private claims: JWTHasuraClaims | null
 
   constructor() {
-    this.session = null;
-    this.claims = null;
+    this.session = null
+    this.claims = null
   }
 
   public setSession(session: Session) {
-    this.session = session;
+    this.session = session
 
     if (session.jwt_token) {
-      const jwtTokenDecoded: JWTClaims = jwt_decode(session.jwt_token);
-      this.claims = jwtTokenDecoded["https://hasura.io/jwt/claims"];
+      const jwtTokenDecoded: JWTClaims = jwt_decode(session.jwt_token)
+      this.claims = jwtTokenDecoded['https://hasura.io/jwt/claims']
     }
   }
 
   public clearSession() {
-    this.session = null;
-    this.claims = null;
+    this.session = null
+    this.claims = null
   }
 
   public getSession(): Session | null {
-    return this.session;
+    return this.session
   }
 
   public getClaim(claim: string): string | string[] | null {
     if (this.claims) {
-      return this.claims[claim];
+      return this.claims[claim]
     } else {
-      return null;
+      return null
     }
   }
 }
