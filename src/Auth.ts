@@ -102,7 +102,7 @@ export default class Auth {
     email,
     password,
     registrationOptions = {},
-  }: types.registerCredentials): Promise<{
+  }: types.UserCredentials): Promise<{
     session: types.Session;
     user: types.User;
   }> {
@@ -138,7 +138,7 @@ export default class Auth {
     email,
     password,
     provider,
-  }: types.loginCredentials): Promise<{
+  }: types.UserCredentials): Promise<{
     session: types.Session | null;
     user: types.User | null;
     mfa?: {
