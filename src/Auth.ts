@@ -101,12 +101,12 @@ export default class Auth {
   public async register({
     email,
     password,
-    registrationOptions = {},
+    options = {},
   }: types.UserCredentials): Promise<{
     session: types.Session;
     user: types.User;
   }> {
-    const { userData, defaultRole, allowedRoles } = registrationOptions;
+    const { userData, defaultRole, allowedRoles } = options;
 
     const registerOptions =
       defaultRole || allowedRoles
@@ -272,7 +272,7 @@ export default class Auth {
     );
   }
 
-  public async changeEmailRequest(new_email: string): Promise<void> {
+  public async requestEmailChange(new_email: string): Promise<void> {
     await this.httpClient.post(
       "/change-email/request",
       {
@@ -284,7 +284,7 @@ export default class Auth {
     );
   }
 
-  public async changeEmailChange(ticket: string): Promise<void> {
+  public async confirmEmailChange(ticket: string): Promise<void> {
     await this.httpClient.post("/change-email/change", {
       ticket,
     });
@@ -306,13 +306,13 @@ export default class Auth {
     );
   }
 
-  public async changePasswordRequest(email: string): Promise<void> {
+  public async requestPasswordChange(email: string): Promise<void> {
     await this.httpClient.post("/change-password/request", {
       email,
     });
   }
 
-  public async changePasswordChange(
+  public async confirmPasswordChange(
     newPassword: string,
     ticket: string
   ): Promise<void> {

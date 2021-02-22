@@ -72,7 +72,7 @@ export interface UserCredentials {
   email?: string;
   password?: string;
   provider?: Provider;
-  registrationOptions?: {
+  options?: {
     userData?: any;
     defaultRole?: string;
     allowedRoles?: string[];
