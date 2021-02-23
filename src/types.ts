@@ -81,8 +81,8 @@ export interface UserCredentials {
 export interface Session {
   jwt_token: string;
   jwt_expires_in: number;
-  refresh_token?: string; // not present if useCookie
   user: User;
+  refresh_token?: string; // not present if useCookie
 }
 
 export interface User {

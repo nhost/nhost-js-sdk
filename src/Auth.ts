@@ -103,7 +103,7 @@ export default class Auth {
     password,
     options = {},
   }: types.UserCredentials): Promise<{
-    session: types.Session;
+    session: types.Session | null;
     user: types.User;
   }> {
     const { userData, defaultRole, allowedRoles } = options;
@@ -131,7 +131,12 @@ export default class Auth {
 
     this._setSession(res.data);
 
-    return { session: res.data, user: res.data.user };
+    if (res.data.jwt_token) {
+      return { session: res.data, user: res.data.user };
+    } else {
+      // if AUTO_ACTIVATE_NEW_USERS is false
+      return { session: null, user: res.data.user };
+    }
   }
 
   public async login({
@@ -511,7 +516,6 @@ export default class Auth {
 
   private _autoLogin(refreshToken: string | null): void {
     if (this.ssr) {
-      this._clearSession();
       return;
     }
 
@@ -552,7 +556,7 @@ export default class Auth {
     } catch (error) {
       if (error.response?.status === 401) {
         await this.logout();
-        return
+        return;
       } else {
         return; // silent fail
       }
@@ -582,11 +586,25 @@ export default class Auth {
     clearInterval(this.refreshInterval);
     clearInterval(this.refreshSleepCheckInterval);
 
+    const oldSession = this.currentSession.getSession();
+
     this.currentSession.clearSession();
     this._removeItem("nhostRefreshToken");
+
+    // avoid notifying twice if logout is called twice in a row
+    if (oldSession) {
+      this.authStateChanged(false);
+    }
   }
 
   private async _setSession(session: types.Session) {
+    // early exit
+    if (session && !session.jwt_token) {
+      return;
+    }
+
+    const oldSession = this.currentSession.getSession();
+
     this.currentSession.setSession(session);
     this.currentUser = session.user;
 
@@ -618,6 +636,9 @@ export default class Auth {
       this.refreshIntervalSleepCheckLastSample = Date.now();
     }, this.sampleRate);
 
-    this.authStateChanged(true);
+    // avoid notifying twice if login is called twice in a row
+    if (!oldSession) {
+      this.authStateChanged(true);
+    }
   }
 }
