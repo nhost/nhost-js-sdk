@@ -129,9 +129,9 @@ export default class Auth {
       throw error;
     }
 
-    this._setSession(res.data);
-
     if (res.data.jwt_token) {
+      this._setSession(res.data);
+
       return { session: res.data, user: res.data.user };
     } else {
       // if AUTO_ACTIVATE_NEW_USERS is false
@@ -532,7 +532,6 @@ export default class Auth {
         this._clearSession();
       }, 0);
 
-      this.loading = false;
       return;
     }
 
@@ -566,7 +565,6 @@ export default class Auth {
     }
 
     this._setSession(res.data);
-    this.loading = false;
     this.tokenChanged();
   }
 
@@ -583,28 +581,23 @@ export default class Auth {
   }
 
   private async _clearSession(): Promise<void> {
+    // early exit
+    if (this.isAuthenticated() === false) {
+      return;
+    }
+
     clearInterval(this.refreshInterval);
     clearInterval(this.refreshSleepCheckInterval);
-
-    const oldSession = this.currentSession.getSession();
 
     this.currentSession.clearSession();
     this._removeItem("nhostRefreshToken");
 
-    // avoid notifying twice if logout is called twice in a row
-    if (oldSession) {
-      this.authStateChanged(false);
-    }
+    this.loading = false;
+    this.authStateChanged(false);
   }
 
   private async _setSession(session: types.Session) {
-    // early exit
-    if (session && !session.jwt_token) {
-      return;
-    }
-
-    const oldSession = this.currentSession.getSession();
-
+    const previouslyAuthenticated = this.isAuthenticated();
     this.currentSession.setSession(session);
     this.currentUser = session.user;
 
@@ -636,8 +629,9 @@ export default class Auth {
       this.refreshIntervalSleepCheckLastSample = Date.now();
     }, this.sampleRate);
 
-    // avoid notifying twice if login is called twice in a row
-    if (!oldSession) {
+    this.loading = false;
+
+    if (!previouslyAuthenticated) {
       this.authStateChanged(true);
     }
   }
