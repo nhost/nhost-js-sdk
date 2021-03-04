@@ -1,16 +1,27 @@
 {
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/**/*.test.ts",
+    "src/test"
+  ],
   "compilerOptions": {
+    "lib": [
+      "es2020",
+      "dom"
+    ],
     "esModuleInterop": true,
     "declaration": true,
-    "strictNullChecks": true,
+    "strict": true,
     "target": "es5",
     "outDir": "dist",
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
-    "lib": ["es2015", "dom"],
-    "rootDir": "src"
-  },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/test"]
+    "rootDir": "src",
+    "noUnusedLocals": true
+  }
 }

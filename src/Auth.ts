@@ -1,68 +1,79 @@
-// @ts-nocheck
 import axios, { AxiosInstance } from "axios";
 import queryString from "query-string";
 import * as types from "./types";
-import JWTMemory from "./JWTMemory";
+import UserSession from "./UserSession";
 
 export default class Auth {
-  private http_client: AxiosInstance;
-  private token_changed_functions: Function[];
-  private auth_changed_functions: Function[];
-  private login_state: boolean | null;
-  private refresh_interval: any;
-  private use_cookies: boolean;
-  private refresh_interval_time: number | null;
-  private client_storage: types.ClientStorage;
-  private client_storage_type: string;
-  private JWTMemory: JWTMemory;
-  private ssr: boolean;
+  private httpClient: AxiosInstance;
+  private tokenChangedFunctions: Function[];
+  private authChangedFunctions: Function[];
 
-  constructor(config: types.AuthConfig, JWTMemory: JWTMemory) {
+  private refreshInterval: any;
+  private useCookies: boolean;
+  private refreshIntervalTime: number | null;
+  private clientStorage: types.ClientStorage;
+  private clientStorageType: string;
+
+  private ssr: boolean | undefined;
+  private refreshTokenLock: boolean;
+  private baseURL: string;
+  private currentUser: types.User | null;
+  private currentSession: UserSession;
+  private loading: boolean;
+  private refreshSleepCheckInterval: any;
+  private refreshIntervalSleepCheckLastSample: number;
+  private sampleRate: number;
+
+  constructor(config: types.AuthConfig, session: UserSession) {
     const {
-      base_url,
-      use_cookies,
-      refresh_interval_time,
-      client_storage,
-      client_storage_type,
+      baseURL,
+      useCookies,
+      refreshIntervalTime,
+      clientStorage,
+      clientStorageType,
       ssr,
+      autoLogin,
     } = config;
 
-    this.use_cookies = use_cookies;
-    this.refresh_interval_time = refresh_interval_time;
-    this.client_storage = client_storage;
-    this.client_storage_type = client_storage_type;
-    this.login_state = null;
-    this.token_changed_functions = [];
-    this.auth_changed_functions = [];
-    this.refresh_interval;
-    this.refresh_sleep_check_interval;
-    this.refresh_interval_sleep_check_last_sample;
-    this.sample_rate = 2000; // check every 2 seconds
-    this.JWTMemory = JWTMemory;
+    this.useCookies = useCookies;
+    this.refreshIntervalTime = refreshIntervalTime;
+    this.clientStorage = clientStorage;
+    this.clientStorageType = clientStorageType;
+    this.tokenChangedFunctions = [];
+    this.authChangedFunctions = [];
+    this.refreshInterval;
+
+    this.refreshSleepCheckInterval = 0;
+    this.refreshIntervalSleepCheckLastSample = Date.now();
+    this.sampleRate = 2000; // check every 2 seconds
     this.ssr = ssr;
 
-    this.http_client = axios.create({
-      baseURL: `${base_url}/auth`,
+    this.refreshTokenLock = false;
+    this.baseURL = baseURL;
+    this.loading = true;
+
+    this.currentUser = null;
+    this.currentSession = session;
+
+    this.httpClient = axios.create({
+      baseURL: `${this.baseURL}/auth`,
       timeout: 10000,
-      withCredentials: this.use_cookies,
+      withCredentials: this.useCookies,
     });
 
-    // get refresh token from query param (from externa OAuth provider callback)
-    let refresh_token: string | null = null;
+    // get refresh token from query param (from external OAuth provider callback)
+    let refreshToken: string | null = null;
 
     if (!ssr) {
       try {
         const parsed = queryString.parse(window.location.search);
-        refresh_token =
+        refreshToken =
           "refresh_token" in parsed ? (parsed.refresh_token as string) : null;
 
-        if (refresh_token) {
-          let new_url = this._removeParam(
-            "refresh_token",
-            window.location.href
-          );
+        if (refreshToken) {
+          let newURL = this._removeParam("refresh_token", window.location.href);
           try {
-            window.history.pushState({}, document.title, new_url);
+            window.history.pushState({}, document.title, newURL);
           } catch {
             // noop
             // window object not available
@@ -73,12 +84,303 @@ export default class Auth {
       }
     }
 
-    refresh_token = refresh_token !== "" ? refresh_token : null;
+    // if empty string, then set it to null
+    refreshToken = refreshToken ? refreshToken : null;
 
-    this.autoLogin(refresh_token);
+    if (autoLogin) {
+      this._autoLogin(refreshToken);
+    } else if (refreshToken) {
+      this._setItem("nhostRefreshToken", refreshToken);
+    }
   }
 
-  private _removeParam(key, sourceURL) {
+  public user(): types.User | null {
+    return this.currentUser;
+  }
+
+  public async register({
+    email,
+    password,
+    options = {},
+  }: types.UserCredentials): Promise<{
+    session: types.Session | null;
+    user: types.User;
+  }> {
+    const { userData, defaultRole, allowedRoles } = options;
+
+    const registerOptions =
+      defaultRole || allowedRoles
+        ? {
+            default_role: defaultRole,
+            allowed_roles: allowedRoles,
+          }
+        : undefined;
+
+    let res;
+    try {
+      res = await this.httpClient.post("/register", {
+        email,
+        password,
+        cookie: this.useCookies,
+        user_data: userData,
+        register_options: registerOptions,
+      });
+    } catch (error) {
+      throw error;
+    }
+
+    if (res.data.jwt_token) {
+      this._setSession(res.data);
+
+      return { session: res.data, user: res.data.user };
+    } else {
+      // if AUTO_ACTIVATE_NEW_USERS is false
+      return { session: null, user: res.data.user };
+    }
+  }
+
+  public async login({
+    email,
+    password,
+    provider,
+  }: types.UserCredentials): Promise<{
+    session: types.Session | null;
+    user: types.User | null;
+    mfa?: {
+      ticket: string;
+    };
+  }> {
+    if (provider) {
+      window.location.href = `${this.baseURL}/auth/providers/${provider}`;
+      return { session: null, user: null };
+    }
+
+    let res;
+    try {
+      res = await this.httpClient.post("/login", {
+        email,
+        password,
+        cookie: this.useCookies,
+      });
+    } catch (error) {
+      this._clearSession();
+      throw error;
+    }
+
+    if ("mfa" in res.data) {
+      return { session: null, user: null, mfa: { ticket: res.data.ticket } };
+    }
+
+    this._setSession(res.data);
+
+    return { session: res.data, user: res.data.user };
+  }
+
+  public async logout(
+    all: boolean = false
+  ): Promise<{
+    session: null;
+    user: null;
+  }> {
+    try {
+      await this.httpClient.post(
+        "/logout",
+        {
+          all,
+        },
+        {
+          params: {
+            refresh_token: await this._getItem("nhostRefreshToken"),
+          },
+        }
+      );
+    } catch (error) {
+      // throw error;
+      // noop
+    }
+
+    this._clearSession();
+
+    return { session: null, user: null };
+  }
+
+  public onTokenChanged(fn: Function): Function {
+    this.tokenChangedFunctions.push(fn);
+
+    // get index;
+    const tokenChangedFunctionIndex = this.authChangedFunctions.length - 1;
+
+    const unsubscribe = () => {
+      try {
+        // replace onTokenChanged with empty function
+        this.authChangedFunctions[tokenChangedFunctionIndex] = () => {};
+      } catch (err) {
+        console.warn(
+          "Unable to unsubscribe onTokenChanged function. Maybe you already did?"
+        );
+      }
+    };
+
+    return unsubscribe;
+  }
+
+  public onAuthStateChanged(fn: Function): Function {
+    this.authChangedFunctions.push(fn);
+
+    // get index;
+    const authStateChangedFunctionIndex = this.authChangedFunctions.length - 1;
+
+    const unsubscribe = () => {
+      try {
+        // replace onAuthStateChanged with empty function
+        this.authChangedFunctions[authStateChangedFunctionIndex] = () => {};
+      } catch (err) {
+        console.warn(
+          "Unable to unsubscribe onAuthStateChanged function. Maybe you already did?"
+        );
+      }
+    };
+
+    return unsubscribe;
+  }
+
+  public isAuthenticated(): boolean | null {
+    if (this.loading) return null;
+    return this.currentSession.getSession() !== null;
+  }
+
+  public getJWTToken(): string | null {
+    return this.currentSession.getSession()?.jwt_token || null;
+  }
+
+  public getClaim(claim: string): string | string[] | null {
+    return this.currentSession.getClaim(claim);
+  }
+
+  public async refreshSession(): Promise<void> {
+    return await this._refreshToken();
+  }
+
+  public async activate(ticket: string): Promise<void> {
+    await this.httpClient.get(`/activate?ticket=${ticket}`);
+  }
+
+  public async changeEmail(new_email: string): Promise<void> {
+    await this.httpClient.post(
+      "/change-email",
+      {
+        new_email,
+      },
+      {
+        headers: this._generateHeaders(),
+      }
+    );
+  }
+
+  public async requestEmailChange(new_email: string): Promise<void> {
+    await this.httpClient.post(
+      "/change-email/request",
+      {
+        new_email,
+      },
+      {
+        headers: this._generateHeaders(),
+      }
+    );
+  }
+
+  public async confirmEmailChange(ticket: string): Promise<void> {
+    await this.httpClient.post("/change-email/change", {
+      ticket,
+    });
+  }
+
+  public async changePassword(
+    oldPassword: string,
+    newPassword: string
+  ): Promise<void> {
+    await this.httpClient.post(
+      "/change-password",
+      {
+        old_password: oldPassword,
+        new_password: newPassword,
+      },
+      {
+        headers: this._generateHeaders(),
+      }
+    );
+  }
+
+  public async requestPasswordChange(email: string): Promise<void> {
+    await this.httpClient.post("/change-password/request", {
+      email,
+    });
+  }
+
+  public async confirmPasswordChange(
+    newPassword: string,
+    ticket: string
+  ): Promise<void> {
+    await this.httpClient.post("/change-password/change", {
+      new_password: newPassword,
+      ticket,
+    });
+  }
+
+  public async MFAGenerate(): Promise<void> {
+    const res = await this.httpClient.post(
+      "/mfa/generate",
+      {},
+      {
+        headers: this._generateHeaders(),
+      }
+    );
+    return res.data;
+  }
+
+  public async MFAEnable(code: string): Promise<void> {
+    await this.httpClient.post(
+      "/mfa/enable",
+      {
+        code,
+      },
+      {
+        headers: this._generateHeaders(),
+      }
+    );
+  }
+
+  public async MFADisable(code: string): Promise<void> {
+    await this.httpClient.post(
+      "/mfa/disable",
+      {
+        code,
+      },
+      {
+        headers: this._generateHeaders(),
+      }
+    );
+  }
+
+  public async MFATotp(
+    code: string,
+    ticket: string
+  ): Promise<{
+    session: types.Session;
+    user: types.User;
+  }> {
+    const res = await this.httpClient.post("/mfa/totp", {
+      code,
+      ticket,
+      cookie: this.useCookies,
+    });
+
+    this._setSession(res.data);
+
+    return { session: res.data, user: res.data.user };
+  }
+
+  private _removeParam(key: string, sourceURL: string) {
     var rtn = sourceURL.split("?")[0],
       param,
       params_arr = [],
@@ -99,446 +401,238 @@ export default class Auth {
     return rtn;
   }
 
-  private async setItem(key: string, value: string): Promise<void> {
+  private async _setItem(key: string, value: string): Promise<void> {
     if (typeof value !== "string") {
-      return console.error(`value is not of type "string"`);
+      console.error(`value is not of type "string"`);
+      return;
     }
 
-    switch (this.client_storage_type) {
+    switch (this.clientStorageType) {
       case "web":
-        if (typeof this.client_storage.setItem !== "function") {
-          console.error(`this.client_storage.setItem is not a function`);
+        if (typeof this.clientStorage.setItem !== "function") {
+          console.error(`this.clientStorage.setItem is not a function`);
           break;
         }
-        this.client_storage.setItem(key, value);
+        this.clientStorage.setItem(key, value);
         break;
       case "react-native":
-        if (typeof this.client_storage.setItem !== "function") {
-          console.error(`this.client_storage.setItem is not a function`);
+        if (typeof this.clientStorage.setItem !== "function") {
+          console.error(`this.clientStorage.setItem is not a function`);
           break;
         }
-        await this.client_storage.setItem(key, value);
+        await this.clientStorage.setItem(key, value);
         break;
       case "capacitor":
-        if (typeof this.client_storage.set !== "function") {
-          console.error(`this.client_storage.set is not a function`);
+        if (typeof this.clientStorage.set !== "function") {
+          console.error(`this.clientStorage.set is not a function`);
           break;
         }
-        await this.client_storage.set({ key, value });
+        await this.clientStorage.set({ key, value });
         break;
       case "expo-secure-storage":
-        if (typeof this.client_storage.setItemAsync !== "function") {
-          console.error(`this.client_storage.setItemAsync is not a function`);
+        if (typeof this.clientStorage.setItemAsync !== "function") {
+          console.error(`this.clientStorage.setItemAsync is not a function`);
           break;
         }
-        this.client_storage.setItemAsync(key, value);
+        this.clientStorage.setItemAsync(key, value);
         break;
       default:
         break;
     }
   }
 
-  private async getItem(key: string): Promise<unknown> {
-    switch (this.client_storage_type) {
+  private async _getItem(key: string): Promise<unknown> {
+    switch (this.clientStorageType) {
       case "web":
-        if (typeof this.client_storage.getItem !== "function") {
-          console.error(`this.client_storage.getItem is not a function`);
+        if (typeof this.clientStorage.getItem !== "function") {
+          console.error(`this.clientStorage.getItem is not a function`);
           break;
         }
-        return this.client_storage.getItem(key);
+        return this.clientStorage.getItem(key);
       case "react-native":
-        if (typeof this.client_storage.getItem !== "function") {
-          console.error(`this.client_storage.getItem is not a function`);
+        if (typeof this.clientStorage.getItem !== "function") {
+          console.error(`this.clientStorage.getItem is not a function`);
           break;
         }
-        return await this.client_storage.getItem(key);
+        return await this.clientStorage.getItem(key);
       case "capacitor":
-        if (typeof this.client_storage.get !== "function") {
-          console.error(`this.client_storage.get is not a function`);
+        if (typeof this.clientStorage.get !== "function") {
+          console.error(`this.clientStorage.get is not a function`);
           break;
         }
-        const res = await this.client_storage.get({ key });
+        const res = await this.clientStorage.get({ key });
         return res.value;
       case "expo-secure-storage":
-        if (typeof this.client_storage.getItemAsync !== "function") {
-          console.error(`this.client_storage.getItemAsync is not a function`);
+        if (typeof this.clientStorage.getItemAsync !== "function") {
+          console.error(`this.clientStorage.getItemAsync is not a function`);
           break;
         }
-        return this.client_storage.getItemAsync(key);
+        return this.clientStorage.getItemAsync(key);
       default:
         break;
     }
   }
 
-  private async removeItem(key: string): Promise<void> {
-    switch (this.client_storage_type) {
+  private async _removeItem(key: string): Promise<void> {
+    switch (this.clientStorageType) {
       case "web":
-        if (typeof this.client_storage.removeItem !== "function") {
-          console.error(`this.client_storage.removeItem is not a function`);
+        if (typeof this.clientStorage.removeItem !== "function") {
+          console.error(`this.clientStorage.removeItem is not a function`);
           break;
         }
-        return this.client_storage.removeItem(key);
+        return this.clientStorage.removeItem(key);
       case "react-native":
-        if (typeof this.client_storage.removeItem !== "function") {
-          console.error(`this.client_storage.removeItem is not a function`);
+        if (typeof this.clientStorage.removeItem !== "function") {
+          console.error(`this.clientStorage.removeItem is not a function`);
           break;
         }
-        return await this.client_storage.removeItem(key);
+        return await this.clientStorage.removeItem(key);
       case "capacitor":
-        if (typeof this.client_storage.remove !== "function") {
-          console.error(`this.client_storage.remove is not a function`);
+        if (typeof this.clientStorage.remove !== "function") {
+          console.error(`this.clientStorage.remove is not a function`);
           break;
         }
-        await this.client_storage.remove({ key });
+        await this.clientStorage.remove({ key });
         break;
       case "expo-secure-storage":
-        if (typeof this.client_storage.deleteItemAsync !== "function") {
-          console.error(
-            `this.client_storage.deleteItemAsync is not a function`
-          );
+        if (typeof this.clientStorage.deleteItemAsync !== "function") {
+          console.error(`this.clientStorage.deleteItemAsync is not a function`);
           break;
         }
-        this.client_storage.deleteItemAsync(key);
+        this.clientStorage.deleteItemAsync(key);
         break;
       default:
         break;
     }
   }
 
-  private generateHeaders(): null | types.Headers {
-    if (this.use_cookies) return null;
-
-    const jwt_token = this.JWTMemory.getJWT();
+  private _generateHeaders(): null | types.Headers {
+    if (this.useCookies) return null;
 
     return {
-      Authorization: `Bearer ${jwt_token}`,
+      Authorization: `Bearer ${this.currentSession.getSession()?.jwt_token}`,
     };
   }
 
-  private autoLogin(refresh_token: string | null): void {
+  private _autoLogin(refreshToken: string | null): void {
     if (this.ssr) {
-      return this.setLoginState(null);
-    }
-    this.refreshToken(refresh_token);
-  }
-
-  private setLoginState(
-    state: boolean,
-    jwt_token: string = "",
-    jwt_expires_in: number = 0
-  ): void {
-    // set new jwt_token
-    if (jwt_token) {
-      this.JWTMemory.setJWT(jwt_token);
+      return;
     }
 
-    // early exit
-    if (this.login_state === state) return;
-
-    // State has changed!
-
-    // set new login_state
-    this.login_state = state;
-
-    if (this.login_state) {
-      const refresh_interval_time =
-        this.refresh_interval_time !== null ||
-        typeof jwt_expires_in !== "number"
-          ? this.refresh_interval_time
-          : Math.max(30 * 1000, jwt_expires_in - 45000); //45 sec before expires
-
-      // start refresh token interval after logging in
-      this.refresh_interval = setInterval(
-        this.refreshToken.bind(this),
-        refresh_interval_time
-      );
-
-      // refresh token after computer has been sleeping
-      // https://stackoverflow.com/questions/14112708/start-calling-js-function-when-pc-wakeup-from-sleep-mode
-      this.refresh_interval_sleep_check_last_sample = Date.now();
-      this.refresh_sleep_check_interval = setInterval(() => {
-        if (
-          Date.now() - this.refresh_interval_sleep_check_last_sample >=
-          this.sample_rate * 2
-        ) {
-          this.refreshToken();
-        }
-        this.refresh_interval_sleep_check_last_sample = Date.now();
-      }, this.sample_rate);
-    } else {
-      // stop refresh interval
-      clearInterval(this.refresh_interval);
-      clearInterval(this.refresh_sleep_check_interval);
-    }
-
-    // call auth state change functions
-    this.authStateChanged(this.login_state);
+    this._refreshToken(refreshToken);
   }
 
-  public async register(
-    email: string,
-    password: string,
-    user_data?: any
-  ): Promise<void> {
-    try {
-      await this.http_client.post("/register", {
-        email,
-        password,
-        user_data,
-      });
-    } catch (error) {
-      throw error;
-    }
-  }
+  private async _refreshToken(initRefreshToken?: string | null): Promise<void> {
+    const refreshToken =
+      initRefreshToken || (await this._getItem("nhostRefreshToken"));
 
-  public async login(
-    email: string,
-    password: string
-  ): Promise<types.LoginData> {
-    let res;
-    try {
-      res = await this.http_client.post("/login", {
-        email,
-        password,
-        cookie: this.use_cookies,
-      });
-    } catch (error) {
-      this.removeItem("refresh_token");
-      throw error;
-    }
+    if (!refreshToken) {
+      // place at end of call-stack to let frontend get `null` first (to match SSR)
+      setTimeout(() => {
+        this._clearSession();
+      }, 0);
 
-    if ("mfa" in res.data) {
-      return res.data;
-    }
-
-    this.setLoginState(true, res.data.jwt_token, res.data.jwt_expires_in);
-
-    // set refresh token
-    if (!this.use_cookies) {
-      await this.setItem("refresh_token", res.data.refresh_token);
-    }
-
-    return {};
-  }
-
-  public async logout(all: boolean = false): Promise<void> {
-    try {
-      await this.http_client.post(
-        "/logout",
-        {
-          all,
-        },
-        {
-          params: {
-            refresh_token: await this.getItem("refresh_token"),
-          },
-        }
-      );
-    } catch (error) {
-      // throw error;
-      // noop
-    }
-
-    this.JWTMemory.clearJWT();
-    this.removeItem("refresh_token");
-    this.setLoginState(false);
-  }
-
-  public onTokenChanged(fn: Function): void {
-    this.token_changed_functions.push(fn);
-  }
-
-  public onAuthStateChanged(fn: Function): void {
-    this.auth_changed_functions.push(fn);
-
-    // get index;
-    const auth_changed_function_index = this.auth_changed_functions.length - 1;
-
-    const unsubscribe = () => {
-      try {
-        // replace onAuthStateChanged with empty function
-        this.auth_changed_functions[auth_changed_function_index] = () => {};
-      } catch (err) {
-        console.warn("Unable to unsubscribe. Maybe you already did?");
-      }
-    };
-
-    return unsubscribe;
-  }
-
-  public isAuthenticated(): boolean | null {
-    return this.login_state;
-  }
-
-  public getJWTToken(): string {
-    return this.JWTMemory.getJWT();
-  }
-
-  public getClaim(claim: string): string | string[] {
-    return this.JWTMemory.getClaim(claim);
-  }
-
-  private async refreshToken(init_refresh_token: string | null): Promise<void> {
-    const refresh_token =
-      init_refresh_token || (await this.getItem("refresh_token"));
-
-    if (!refresh_token) {
-      // palce at end of call-stack to let frontend get `null` first (to match SSR)
-      setTimeout(() => this.setLoginState(false), 0);
       return;
     }
 
     let res;
     try {
-      res = await this.http_client.get("/token/refresh", {
+      // set lock to avoid two refresh token request being sent at the same time with the same token.
+      // If so, the last request will fail because the first request used the refresh token
+      if (this.refreshTokenLock) {
+        return console.debug(
+          "refresh token already in transit. Halting this request."
+        );
+      }
+      this.refreshTokenLock = true;
+
+      // make refresh token request
+      res = await this.httpClient.get("/token/refresh", {
         params: {
-          refresh_token,
+          refresh_token: refreshToken,
         },
       });
     } catch (error) {
-      // TODO: if error was 401 Unauthorized => clear refresh token locally.
-      console.log("error refreshing..");
       if (error.response?.status === 401) {
-        return this.setLoginState(false);
+        await this.logout();
+        return;
       } else {
-        return; // refresh failed
+        return; // silent fail
       }
+    } finally {
+      // release lock
+      this.refreshTokenLock = false;
     }
 
-    // set refresh token
-    if (!this.use_cookies) {
-      await this.setItem("refresh_token", res.data.refresh_token);
-    }
-
-    this.setLoginState(true, res.data.jwt_token, res.data.jwt_expires_in);
+    this._setSession(res.data);
     this.tokenChanged();
   }
 
   private tokenChanged(): void {
-    for (const tokenChangedFunction of this.token_changed_functions) {
+    for (const tokenChangedFunction of this.tokenChangedFunctions) {
       tokenChangedFunction();
     }
   }
 
   private authStateChanged(state: boolean): void {
-    for (const authChangedFunction of this.auth_changed_functions) {
+    for (const authChangedFunction of this.authChangedFunctions) {
       authChangedFunction(state);
     }
   }
 
-  public async activate(ticket: string): Promise<void> {
-    await this.http_client.get(`/activate?ticket=${ticket}`);
+  private async _clearSession(): Promise<void> {
+    // early exit
+    if (this.isAuthenticated() === false) {
+      return;
+    }
+
+    clearInterval(this.refreshInterval);
+    clearInterval(this.refreshSleepCheckInterval);
+
+    this.currentSession.clearSession();
+    this._removeItem("nhostRefreshToken");
+
+    this.loading = false;
+    this.authStateChanged(false);
   }
 
-  public async changeEmail(new_email: string): Promise<void> {
-    await this.http_client.post(
-      "/change-email",
-      {
-        new_email,
-      },
-      {
-        headers: this.generateHeaders(),
-      }
+  private async _setSession(session: types.Session) {
+    const previouslyAuthenticated = this.isAuthenticated();
+    this.currentSession.setSession(session);
+    this.currentUser = session.user;
+
+    if (!this.useCookies && session.refresh_token) {
+      await this._setItem("nhostRefreshToken", session.refresh_token);
+    }
+
+    const JWTExpiresIn = session.jwt_expires_in;
+    const refreshIntervalTime = this.refreshIntervalTime
+      ? this.refreshIntervalTime
+      : Math.max(30 * 1000, JWTExpiresIn - 45000); //45 sec before expires
+
+    // start refresh token interval after logging in
+    this.refreshInterval = setInterval(
+      this._refreshToken.bind(this),
+      refreshIntervalTime
     );
-  }
 
-  public async changeEmailRequest(new_email: string): Promise<void> {
-    await this.http_client.post(
-      "/change-email/request",
-      {
-        new_email,
-      },
-      {
-        headers: this.generateHeaders(),
+    // refresh token after computer has been sleeping
+    // https://stackoverflow.com/questions/14112708/start-calling-js-function-when-pc-wakeup-from-sleep-mode
+    this.refreshIntervalSleepCheckLastSample = Date.now();
+    this.refreshSleepCheckInterval = setInterval(() => {
+      if (
+        Date.now() - this.refreshIntervalSleepCheckLastSample >=
+        this.sampleRate * 2
+      ) {
+        this._refreshToken();
       }
-    );
-  }
+      this.refreshIntervalSleepCheckLastSample = Date.now();
+    }, this.sampleRate);
 
-  public async changeEmailChange(ticket: string): Promise<void> {
-    await this.http_client.post("/change-email/change", {
-      ticket,
-    });
-  }
+    this.loading = false;
 
-  public async changePassword(
-    old_password: string,
-    new_password: string
-  ): Promise<void> {
-    await this.http_client.post(
-      "/change-password",
-      {
-        old_password,
-        new_password,
-      },
-      {
-        headers: this.generateHeaders(),
-      }
-    );
-  }
-
-  public async changePasswordRequest(email: string): Promise<void> {
-    await this.http_client.post("/change-password/request", {
-      email,
-    });
-  }
-
-  public async changePasswordChange(
-    new_password: string,
-    ticket: string
-  ): Promise<void> {
-    await this.http_client.post("/change-password/change", {
-      new_password,
-      ticket,
-    });
-  }
-
-  public async MFAGenerate(): Promise<void> {
-    const res = await this.http_client.post(
-      "/mfa/generate",
-      {},
-      {
-        headers: this.generateHeaders(),
-      }
-    );
-    return res.data;
-  }
-
-  public async MFAEnable(code: string): Promise<void> {
-    await this.http_client.post(
-      "/mfa/enable",
-      {
-        code,
-      },
-      {
-        headers: this.generateHeaders(),
-      }
-    );
-  }
-
-  public async MFADisable(code: string): Promise<void> {
-    await this.http_client.post(
-      "/mfa/disable",
-      {
-        code,
-      },
-      {
-        headers: this.generateHeaders(),
-      }
-    );
-  }
-
-  public async MFATotp(code: string, ticket: string): Promise<void> {
-    const res = await this.http_client.post("/mfa/totp", {
-      code,
-      ticket,
-      cookie: this.use_cookies,
-    });
-
-    this.setLoginState(true, res.data.jwt_token, res.data.jwt_expires_in);
-
-    // set refresh token
-    if (!this.use_cookies) {
-      await this.setItem("refresh_token", res.data.refresh_token);
+    if (!previouslyAuthenticated) {
+      this.authStateChanged(true);
     }
   }
 }

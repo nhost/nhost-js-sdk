@@ -1,12 +1,9 @@
-import nhost from "../index";
+import { createClient } from "../index";
 
 const config = {
-  base_url: "http://localhost:3000",
+  baseURL: "http://localhost:3000",
 };
 
-nhost.initializeApp(config);
+const nhost = createClient(config);
 
-const auth = nhost.auth();
-const storage = nhost.storage();
-
-export { auth, storage };
+export const { auth, storage } = nhost;

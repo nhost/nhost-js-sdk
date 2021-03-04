@@ -5,7 +5,7 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-jest.useFakeTimers();
+jest.useFakeTimers("modern");
 
 it("should register first user", async () => {
   await expect(auth.register("user-1@nhost.io", "password-1")).toResolve();
@@ -40,21 +40,25 @@ it("should not be able to register with a short password", async () => {
 });
 
 it("should not be able to login with wrong password", async () => {
-  await expect(auth.login("user-1@nhost.io", "wrong-password-1")).toReject();
+  await expect(
+    auth.login({ email: "user-1@nhost.io", password: "wrong-password-1" })
+  ).toReject();
 });
 
 it("should not be able to login with wrong password", async () => {
-  await expect(auth.login("user-1@nhost.io", "password-1")).toResolve();
+  await expect(
+    auth.login({ email: "user-1@nhost.io", password: "password-1" })
+  ).toResolve();
 });
 
 it("should be able to retreive JWT Token", async () => {
-  const jwt_token = auth.getJWTToken();
-  expect(jwt_token).toBeString();
+  const JWTToken = auth.getJWTToken();
+  expect(JWTToken).toBeString();
 });
 
 it("should be able to get user id as JWT claim", async () => {
-  const user_id = auth.getClaim("x-hasura-user-id");
-  expect(user_id).toBeString();
+  const userId = auth.getClaim("x-hasura-user-id");
+  expect(userId).toBeString();
 });
 
 it("should be authenticated", async () => {
@@ -74,29 +78,35 @@ it("should not be authenticated", async () => {
 });
 
 it("should not be able to retreive JWT token after logout", () => {
-  const jwt_token = auth.getJWTToken();
-  expect(jwt_token).toBeEmpty();
+  const JWTToken = auth.getJWTToken();
+  expect(JWTToken).toBeEmpty();
 });
 
-it("should not be able to retreive JWT claim after logout (should fail)", () => {
-  expect(true).toBe(true);
+it("should not be able to retreive JWT claim after logout", () => {
+  expect(auth.getClaim("x-hasura-user-id")).toBe(undefined);
 });
 
 describe("testing onAuthStateChanged", () => {
-  let auth_state_change_test_var;
+  let authStateVar;
 
-  auth.onAuthStateChanged((d) => {
-    auth_state_change_test_var = d;
+  const unsubscribe = auth.onAuthStateChanged((d) => {
+    authStateVar = d;
   });
 
-  it("should not be able to logout twice", async () => {
-    await auth.login("user-1@nhost.io", "password-1");
-    expect(auth_state_change_test_var).toBe(true);
+  it("login should set authStateVar to true", async () => {
+    await auth.login({ email: "user-1@nhost.io", password: "password-1" });
+    expect(authStateVar).toBe(true);
   });
 
-  it("auth_state_change_test_var should update to false after logout (should fail)", async () => {
+  it("logout should set authStateVar to false", async () => {
     await auth.logout();
-    expect(auth_state_change_test_var).toBe(false);
+    expect(authStateVar).toBe(false);
+  });
+
+  it("unsubscribe auth state changes, login, authStateVar should be unchanged", async () => {
+    unsubscribe();
+    await auth.login({ email: "user-1@nhost.io", password: "password-1" });
+    expect(authStateVar).toBe(false);
   });
 });
 
@@ -104,27 +114,44 @@ describe.skip("Refresh time interval", () => {
   it("should retreive new jwt token after 3000 seconds based on automatic refresh interval", async () => {
     jest.useFakeTimers();
 
-    await auth.login("user-1@nhost.io", "password-1");
+    await auth.login({ email: "user-1@nhost.io", password: "password-1" });
 
     const jwt_token = auth.getJWTToken();
 
-    jest.advanceTimersByTime(4000);
+    jest.advanceTimersByTime(960000); // 16 min
 
-    const new_jwt_token = auth.getJWTToken();
+    const newJWTToken = auth.getJWTToken();
 
-    expect(new_jwt_token).not.toBe(jwt_token);
+    expect(newJWTToken).not.toBe(jwt_token);
+  });
+
+  it("should retreive new jwt token after 3000 seconds based on automatic refresh interval", async () => {
+    jest.useFakeTimers();
+
+    let tokenStateVar = 0;
+    auth.onTokenChanged(() => {
+      tokenStateVar++;
+    });
+
+    await auth.login({ email: "user-1@nhost.io", password: "password-1" });
+
+    expect(tokenStateVar).toBe(1);
+    jest.advanceTimersByTime(960000); // 16 min
+    expect(tokenStateVar).toBe(2);
   });
 });
 
 describe("password change", () => {
   it("Should be able to logout and login", async () => {
     auth.logout();
-    await expect(auth.login("user-1@nhost.io", "password-1")).toResolve();
+    await expect(
+      auth.login({ email: "user-1@nhost.io", password: "password-1" })
+    ).toResolve();
   });
 
   it("should be able to change password", async () => {
     auth.logout();
-    await auth.login("user-1@nhost.io", "password-1");
+    await auth.login({ email: "user-1@nhost.io", password: "password-1" });
     await expect(
       auth.changePassword("password-1", "password-1-new")
     ).toResolve();
@@ -132,6 +159,8 @@ describe("password change", () => {
 
   it("should be able to logout and login with new password", async () => {
     auth.logout();
-    await expect(auth.login("user-1@nhost.io", "password-1-new")).toResolve();
+    await expect(
+      auth.login({ email: "user-1@nhost.io", password: "password-1-new" })
+    ).toResolve();
   });
 });

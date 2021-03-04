@@ -1,30 +1,33 @@
 export interface UserConfig {
-  base_url: string;
-  use_cookies?: boolean;
-  refresh_interval_time?: number | null;
-  client_storage?: ClientStorage;
-  client_storage_type?: string;
-}
-
-export interface AuthConfig {
-  base_url: string;
-  use_cookies: boolean;
-  refresh_interval_time: number | null;
-  client_storage: ClientStorage;
-  client_storage_type: string;
+  baseURL: string;
+  useCookies?: boolean;
+  refreshIntervalTime?: number | null;
+  clientStorage?: ClientStorage;
+  clientStorageType?: string;
+  autoLogin?: boolean;
   ssr?: boolean;
 }
 
+export interface AuthConfig {
+  baseURL: string;
+  useCookies: boolean;
+  refreshIntervalTime: number | null;
+  clientStorage: ClientStorage;
+  clientStorageType: string;
+  ssr?: boolean;
+  autoLogin: boolean;
+}
+
 export interface StorageConfig {
-  base_url: string;
-  use_cookies: boolean;
+  baseURL: string;
+  useCookies: boolean;
 }
 
 export interface ClientStorage {
   // localStorage
   // AsyncStorage
   // https://react-native-community.github.io/async-storage/docs/usage
-  setItem?: (key: string, value: unknown) => void;
+  setItem?: (key: string, value: string) => void;
   getItem?: (key: string) => any;
   removeItem?: (key: string) => void;
 
@@ -53,4 +56,51 @@ export interface LoginData {
 
 export interface Headers {
   Authorization?: string;
+}
+
+export type Provider =
+  | "apple"
+  | "facebook"
+  | "github"
+  | "google"
+  | "linkedin"
+  | "spotify"
+  | "twitter"
+  | "windowslive";
+
+export interface UserCredentials {
+  email?: string;
+  password?: string;
+  provider?: Provider;
+  options?: {
+    userData?: any;
+    defaultRole?: string;
+    allowedRoles?: string[];
+  };
+}
+export interface Session {
+  jwt_token: string;
+  jwt_expires_in: number;
+  user: User;
+  refresh_token?: string; // not present if useCookie
+}
+
+export interface User {
+  id: string;
+  email?: string;
+  display_name?: string;
+  avatar_url?: string;
+}
+export interface JWTHasuraClaims {
+  [claim: string]: string | string[];
+  "x-hasura-allowed-roles" : string[];
+  "x-hasura-default-role": string;
+  "x-hasura-user-id": string;
+}
+
+// https://hasura.io/docs/1.0/graphql/core/auth/authentication/jwt.html#the-spec
+export interface JWTClaims {
+  sub?: string;
+  iat?: number;
+  "https://hasura.io/jwt/claims": JWTHasuraClaims;
 }

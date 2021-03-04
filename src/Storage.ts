@@ -1,38 +1,39 @@
 import axios, { AxiosInstance } from "axios";
 import * as types from "./types";
-import JWTMemory from "./JWTMemory";
+import UserSession from "./UserSession";
 import {
   StringFormat,
   base64Bytes,
   utf8Bytes,
   percentEncodedBytes,
 } from "./utils";
-import Blob from "blob";
+// @ts-ignore
+import Blob from "node-blob";
 
 export default class Storage {
-  private http_client: AxiosInstance;
-  private JWTMemory: JWTMemory;
-  private use_cookies: boolean;
+  private httpClient: AxiosInstance;
+  private useCookies: boolean;
+  private currentSession: UserSession;
 
-  constructor(config: types.StorageConfig, JWTMemory: JWTMemory) {
-    this.JWTMemory = JWTMemory;
-    this.use_cookies = config.use_cookies;
+  constructor(config: types.StorageConfig, session: UserSession) {
+    this.currentSession = session;
+    this.useCookies = config.useCookies;
 
-    this.http_client = axios.create({
-      baseURL: config.base_url,
+    this.httpClient = axios.create({
+      baseURL: config.baseURL,
       timeout: 120 * 1000, // milliseconds
-      withCredentials: this.use_cookies,
+      withCredentials: this.useCookies,
     });
   }
 
   private generateAuthorizationHeader(): null | types.Headers {
-    if (this.use_cookies) return null;
+    if (this.useCookies) return null;
 
-    const jwt_token = this.JWTMemory.getJWT();
+    const JWTToken = this.currentSession.getSession()?.jwt_token;
 
-    if (jwt_token) {
+    if (JWTToken) {
       return {
-        Authorization: `Bearer ${jwt_token}`,
+        Authorization: `Bearer ${JWTToken}`,
       };
     } else {
       return null;
@@ -45,17 +46,17 @@ export default class Storage {
     metadata: object | null = null,
     onUploadProgress: any | undefined = undefined
   ) {
-    let form_data = new FormData();
-    form_data.append("file", file);
+    let formData = new FormData();
+    formData.append("file", file);
 
     // todo: handle metadata
     if (metadata !== null) {
-      console.warn("Metadata is not yet handled in this NHOST JS SDK.");
+      console.warn("Metadata is not yet handled in this version..");
     }
 
-    const upload_res = await this.http_client.post(
+    const upload_res = await this.httpClient.post(
       `/storage/o${path}`,
-      form_data,
+      formData,
       {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -72,22 +73,19 @@ export default class Storage {
     path: string,
     data: string,
     type: StringFormat = "raw",
-    metadata: object | null = null,
+    metadata: { "content-type": string } | null = null,
     onUploadProgress: any | undefined = undefined
   ) {
-    // todo: handle metadata
-    // if (metadata !== null) {
-    //   console.warn("Metadata is not yet handled in this NHOST JS SDK.");
-    // }
-
-    let file;
+    let blob;
     if (type === "raw") {
       const fileData = utf8Bytes(data);
+
       const contentType =
         metadata && metadata.hasOwnProperty("content-type")
           ? metadata["content-type"]
           : null;
-      file = new Blob([fileData], { type: contentType });
+
+      blob = new Blob([fileData], { type: contentType });
     } else if (type === "data_url") {
       let isBase64 = false;
       let contentType: string | undefined = undefined;
@@ -111,16 +109,19 @@ export default class Storage {
         ? base64Bytes(StringFormat.BASE64, restData)
         : percentEncodedBytes(restData);
 
-      file = new Blob([fileData], { type: contentType });
+      blob = new Blob([fileData], { type: contentType });
     }
 
     // create fil from message
+    var file = new File([blob], "sample.JPG", { type: "image/png" });
+
+    console.log({ file });
 
     // create form data
     let form_data = new FormData();
     form_data.append("file", file);
 
-    const upload_res = await this.http_client.post(
+    const uploadRes = await this.httpClient.post(
       `/storage/o${path}`,
       form_data,
       {
@@ -132,20 +133,20 @@ export default class Storage {
       }
     );
 
-    return upload_res.data;
+    return uploadRes.data;
   }
 
   async delete(path: string) {
-    const upload_res = await this.http_client.delete(`storage/o${path}`, {
+    const requestRes = await this.httpClient.delete(`storage/o${path}`, {
       headers: {
         ...this.generateAuthorizationHeader(),
       },
     });
-    return upload_res.data;
+    return requestRes.data;
   }
 
   async getMetadata(path: string): Promise<object> {
-    const res = await this.http_client.get(`storage/m${path}`, {
+    const res = await this.httpClient.get(`storage/m${path}`, {
       headers: {
         ...this.generateAuthorizationHeader(),
       },
