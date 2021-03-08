@@ -415,6 +415,7 @@ export default class Auth {
         }
         this.clientStorage.setItem(key, value);
         break;
+      case "custom":
       case "react-native":
         if (typeof this.clientStorage.setItem !== "function") {
           console.error(`this.clientStorage.setItem is not a function`);
@@ -449,6 +450,7 @@ export default class Auth {
           break;
         }
         return this.clientStorage.getItem(key);
+      case "custom":
       case "react-native":
         if (typeof this.clientStorage.getItem !== "function") {
           console.error(`this.clientStorage.getItem is not a function`);
@@ -481,6 +483,7 @@ export default class Auth {
           break;
         }
         return this.clientStorage.removeItem(key);
+      case "custom":
       case "react-native":
         if (typeof this.clientStorage.removeItem !== "function") {
           console.error(`this.clientStorage.removeItem is not a function`);
