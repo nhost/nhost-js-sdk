@@ -3,10 +3,12 @@ import queryString from "query-string";
 import * as types from "./types";
 import UserSession from "./UserSession";
 
+export type AuthChangedFunction = (isAuthenticated: boolean) => void;
+
 export default class Auth {
   private httpClient: AxiosInstance;
   private tokenChangedFunctions: Function[];
-  private authChangedFunctions: Function[];
+  private authChangedFunctions: AuthChangedFunction[];
 
   private refreshInterval: any;
   private useCookies: boolean;
@@ -224,7 +226,7 @@ export default class Auth {
     return unsubscribe;
   }
 
-  public onAuthStateChanged(fn: Function): Function {
+  public onAuthStateChanged(fn: AuthChangedFunction): Function {
     this.authChangedFunctions.push(fn);
 
     // get index;
@@ -247,6 +249,20 @@ export default class Auth {
   public isAuthenticated(): boolean | null {
     if (this.loading) return null;
     return this.currentSession.getSession() !== null;
+  }
+
+  public isAuthenticatedAsync(): Promise<boolean> {
+    const isAuthenticated = this.isAuthenticated();
+
+    return new Promise(resolve => {
+      if(isAuthenticated !== null) resolve(isAuthenticated);
+      else {
+        const unsubscribe = this.onAuthStateChanged((isAuthenticated) => {
+          resolve(isAuthenticated);
+          unsubscribe();
+        })
+      }
+    })
   }
 
   public getJWTToken(): string | null {
