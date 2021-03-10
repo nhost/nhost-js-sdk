@@ -5,4 +5,4 @@ const createClient = (config: UserConfig) => {
   return new NhostClient(config);
 };
 
-export { NhostClient, createClient, User, Session };
+export { NhostClient, createClient, User, Session, UserConfig };
