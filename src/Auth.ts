@@ -540,9 +540,7 @@ export default class Auth {
       // set lock to avoid two refresh token request being sent at the same time with the same token.
       // If so, the last request will fail because the first request used the refresh token
       if (this.refreshTokenLock) {
-        return console.debug(
-          "refresh token already in transit. Halting this request."
-        );
+        return;
       }
       this.refreshTokenLock = true;
 
@@ -605,34 +603,33 @@ export default class Auth {
       await this._setItem("nhostRefreshToken", session.refresh_token);
     }
 
-    const JWTExpiresIn = session.jwt_expires_in;
-    const refreshIntervalTime = this.refreshIntervalTime
-      ? this.refreshIntervalTime
-      : Math.max(30 * 1000, JWTExpiresIn - 45000); //45 sec before expires
-
-    // start refresh token interval after logging in
-    this.refreshInterval = setInterval(
-      this._refreshToken.bind(this),
-      refreshIntervalTime
-    );
-
-    // refresh token after computer has been sleeping
-    // https://stackoverflow.com/questions/14112708/start-calling-js-function-when-pc-wakeup-from-sleep-mode
-    this.refreshIntervalSleepCheckLastSample = Date.now();
-    this.refreshSleepCheckInterval = setInterval(() => {
-      if (
-        Date.now() - this.refreshIntervalSleepCheckLastSample >=
-        this.sampleRate * 2
-      ) {
-        this._refreshToken();
-      }
-      this.refreshIntervalSleepCheckLastSample = Date.now();
-    }, this.sampleRate);
-
-    this.loading = false;
-
     if (!previouslyAuthenticated) {
+      // start refresh token interval after logging in
+      const JWTExpiresIn = session.jwt_expires_in;
+      const refreshIntervalTime = this.refreshIntervalTime
+        ? this.refreshIntervalTime
+        : Math.max(30 * 1000, JWTExpiresIn - 45000); //45 sec before expires
+      this.refreshInterval = setInterval(
+        this._refreshToken.bind(this),
+        refreshIntervalTime
+      );
+
+      // refresh token after computer has been sleeping
+      // https://stackoverflow.com/questions/14112708/start-calling-js-function-when-pc-wakeup-from-sleep-mode
+      this.refreshIntervalSleepCheckLastSample = Date.now();
+      this.refreshSleepCheckInterval = setInterval(() => {
+        if (
+          Date.now() - this.refreshIntervalSleepCheckLastSample >=
+          this.sampleRate * 2
+        ) {
+          this._refreshToken();
+        }
+        this.refreshIntervalSleepCheckLastSample = Date.now();
+      }, this.sampleRate);
+
       this.authStateChanged(true);
     }
+
+    this.loading = false;
   }
 }
