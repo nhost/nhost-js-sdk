@@ -46,12 +46,16 @@ export default class Storage {
     metadata: object | null = null,
     onUploadProgress: any | undefined = undefined
   ) {
+    if (!path.startsWith("/")) {
+      throw new Error("`path` must start with `/`");
+    }
+
     let formData = new FormData();
     formData.append("file", file);
 
     // todo: handle metadata
     if (metadata !== null) {
-      console.warn("Metadata is not yet handled in this version..");
+      console.warn("Metadata is not yet handled in this version.");
     }
 
     const upload_res = await this.httpClient.post(
@@ -76,6 +80,9 @@ export default class Storage {
     metadata: { "content-type": string } | null = null,
     onUploadProgress: any | undefined = undefined
   ) {
+    if (!path.startsWith("/")) {
+      throw new Error("`path` must start with `/`");
+    }
     let blob;
     if (type === "raw") {
       const fileData = utf8Bytes(data);
@@ -137,6 +144,9 @@ export default class Storage {
   }
 
   async delete(path: string) {
+    if (!path.startsWith("/")) {
+      throw new Error("`path` must start with `/`");
+    }
     const requestRes = await this.httpClient.delete(`storage/o${path}`, {
       headers: {
         ...this.generateAuthorizationHeader(),
@@ -146,6 +156,9 @@ export default class Storage {
   }
 
   async getMetadata(path: string): Promise<object> {
+    if (!path.startsWith("/")) {
+      throw new Error("`path` must start with `/`");
+    }
     const res = await this.httpClient.get(`storage/m${path}`, {
       headers: {
         ...this.generateAuthorizationHeader(),
