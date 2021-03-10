@@ -7,7 +7,7 @@ services:
       - ./db_data:/var/lib/postgresql/data
     env_file: .env
   graphql-engine:
-    image: hasura/graphql-engine:v1.3.0.cli-migrations
+    image: hasura/graphql-engine:v1.3.3.cli-migrations
     depends_on:
       - "postgres"
     restart: always
