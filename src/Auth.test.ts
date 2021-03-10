@@ -83,9 +83,9 @@ it("should not be able to retreive JWT claim after logout", () => {
 });
 
 describe("testing onAuthStateChanged", () => {
-  let authStateVar;
+  let authStateVar: boolean;
 
-  const unsubscribe = auth.onAuthStateChanged((d) => {
+  const unsubscribe = auth.onAuthStateChanged((d: boolean) => {
     authStateVar = d;
   });
 
