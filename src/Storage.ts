@@ -7,8 +7,6 @@ import {
   utf8Bytes,
   percentEncodedBytes,
 } from "./utils";
-// @ts-ignore
-import Blob from "node-blob";
 
 export default class Storage {
   private httpClient: AxiosInstance;
@@ -76,32 +74,28 @@ export default class Storage {
   async putString(
     path: string,
     data: string,
-    type: StringFormat = "raw",
+    type: "raw" | "data_url" = "raw",
     metadata: { "content-type": string } | null = null,
     onUploadProgress: any | undefined = undefined
   ) {
     if (!path.startsWith("/")) {
       throw new Error("`path` must start with `/`");
     }
-    let blob;
-    if (type === "raw") {
-      const fileData = utf8Bytes(data);
 
-      const contentType =
+    let fileData;
+    let contentType: string | undefined;
+    if (type === "raw") {
+      fileData = utf8Bytes(data);
+      contentType =
         metadata && metadata.hasOwnProperty("content-type")
           ? metadata["content-type"]
-          : null;
-
-      blob = new Blob([fileData], { type: contentType });
+          : undefined;
     } else if (type === "data_url") {
       let isBase64 = false;
-      let contentType: string | undefined = undefined;
-
       const matches = data.match(/^data:([^,]+)?,/);
       if (matches === null) {
         throw "Data must be formatted 'data:[<mediatype>][;base64],<data>";
       }
-
       const middle = matches[1] || null;
       if (middle != null) {
         isBase64 = middle.endsWith(";base64");
@@ -109,20 +103,17 @@ export default class Storage {
           ? middle.substring(0, middle.length - ";base64".length)
           : middle;
       }
-
       const restData = data.substring(data.indexOf(",") + 1);
-
-      const fileData = isBase64
+      fileData = isBase64
         ? base64Bytes(StringFormat.BASE64, restData)
         : percentEncodedBytes(restData);
-
-      blob = new Blob([fileData], { type: contentType });
     }
 
-    // create fil from message
-    var file = new File([blob], "sample.JPG", { type: "image/png" });
+    if (!fileData) {
+      throw new Error("Unbale to generate file data");
+    }
 
-    console.log({ file });
+    const file = new File([fileData], "untitled", { type: contentType });
 
     // create form data
     let form_data = new FormData();
