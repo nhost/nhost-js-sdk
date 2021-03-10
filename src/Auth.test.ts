@@ -75,11 +75,11 @@ it("should not be authenticated", async () => {
 
 it("should not be able to retreive JWT token after logout", () => {
   const JWTToken = auth.getJWTToken();
-  expect(JWTToken).toBeEmpty();
+  expect(JWTToken).toBeNull();
 });
 
 it("should not be able to retreive JWT claim after logout", () => {
-  expect(auth.getClaim("x-hasura-user-id")).toBe(undefined);
+  expect(auth.getClaim("x-hasura-user-id")).toBeNull();
 });
 
 describe("testing onAuthStateChanged", () => {
