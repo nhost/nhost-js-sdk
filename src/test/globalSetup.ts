@@ -22,17 +22,17 @@ export default async (): Promise<void> => {
   await compose.upAll({ cwd: test_path, log: true });
 
   // wait until HBP and Hasura is up
-  let backend_online = false;
+  let backendOnline = false;
   let retries = 0;
-  const max_retries = 20;
-  while (!backend_online && retries < max_retries) {
+  const maxRetries = 20;
+  while (!backendOnline && retries < maxRetries) {
     try {
       // both hbp and the graphql engine must be up
       await axios.get("http://localhost:3000/healthz");
       await axios.get("http://localhost:8080/healthz");
-      backend_online = true;
+      backendOnline = true;
     } catch (error) {
-      console.log(`Backend not online. Test ${retries}/${max_retries}`);
+      console.log(`Backend not online. Test ${retries}/${maxRetries}`);
       await sleep(5 * 1000);
       retries += 1;
       continue;

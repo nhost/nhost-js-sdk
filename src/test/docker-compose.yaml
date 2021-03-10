@@ -17,7 +17,7 @@ services:
     volumes:
       - ./migrations:/hasura-migrations
   hasura-backend-plus:
-    image: nhost/hasura-backend-plus:latest
+    image: nhost/hasura-backend-plus:v2.2.4
     # build: ../../../hasura-backend-plus
     ports:
       - "3000:3000"
