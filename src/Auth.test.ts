@@ -1,10 +1,6 @@
 import "jest-extended";
 import { auth } from "./test/test-utils";
 
-// function sleep(ms: number) {
-//   return new Promise((resolve) => setTimeout(resolve, ms));
-// }
-
 jest.useFakeTimers("modern");
 
 it("should register first user", async () => {
@@ -90,17 +86,19 @@ it("should not be authenticated", async () => {
 });
 
 it("should not be able to retreive JWT token after logout", () => {
-  expect(auth.getJWTToken()).toBe(null);
+
+  const JWTToken = auth.getJWTToken();
+  expect(JWTToken).toBeNull();
 });
 
 it("should not be able to retreive JWT claim after logout", () => {
-  expect(auth.getClaim("x-hasura-user-id")).toBe(null);
+  expect(auth.getClaim("x-hasura-user-id")).toBeNull();
 });
 
 describe("testing onAuthStateChanged", () => {
-  let authStateVar: any;
+  let authStateVar: boolean;
 
-  const unsubscribe = auth.onAuthStateChanged((d: any) => {
+  const unsubscribe = auth.onAuthStateChanged((d: boolean) => {
     authStateVar = d;
   });
 
