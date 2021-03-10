@@ -1,10 +1,6 @@
 import "jest-extended";
 import { auth } from "./test/test-utils";
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 jest.useFakeTimers("modern");
 
 it("should register first user", async () => {
