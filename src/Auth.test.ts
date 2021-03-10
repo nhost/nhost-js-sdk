@@ -4,35 +4,35 @@ import { auth } from "./test/test-utils";
 jest.useFakeTimers("modern");
 
 it("should register first user", async () => {
-  await expect(auth.register("user-1@nhost.io", "password-1")).toResolve();
+  await expect(auth.register({email: "user-1@nhost.io", password: "password-1"})).toResolve();
 });
 
 it("should register second user", async () => {
-  await expect(auth.register("user-2@nhost.io", "password-2")).toResolve();
+  await expect(auth.register({email: "user-2@nhost.io", password: "password-2"})).toResolve();
 });
 
 it("should not be able to register same user twice", async () => {
-  await expect(auth.register("user-2@nhost.io", "password-2")).toReject();
+  await expect(auth.register({email: "user-2@nhost.io", password: "password-2"})).toReject();
 });
 
 it("should not be able to register user with invalid email", async () => {
-  await expect(auth.register("invalid-email.com", "password")).toReject();
+  await expect(auth.register({email: "invalid-email.com", password: "password"})).toReject();
 });
 
 it("should not be able to register without a password", async () => {
-  await expect(auth.register("invalid-email.com", "")).toReject();
+  await expect(auth.register({email: "invalid-email.com", password: ""})).toReject();
 });
 
 it("should not be able to register without an email", async () => {
-  await expect(auth.register("", "password")).toReject();
+  await expect(auth.register({email: "", password: "password"})).toReject();
 });
 
 it("should not be able to register without an email and password", async () => {
-  await expect(auth.register("", "")).toReject();
+  await expect(auth.register({email: "", password: ""})).toReject();
 });
 
 it("should not be able to register with a short password", async () => {
-  await expect(auth.register("user-1@nhost.io", "")).toReject();
+  await expect(auth.register({email: "user-1@nhost.io", password: ""})).toReject();
 });
 
 it("should not be able to login with wrong password", async () => {
