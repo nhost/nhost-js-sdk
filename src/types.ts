@@ -24,6 +24,7 @@ export interface StorageConfig {
 }
 
 export interface ClientStorage {
+  // custom
   // localStorage
   // AsyncStorage
   // https://react-native-community.github.io/async-storage/docs/usage
@@ -47,7 +48,8 @@ export type ClientStorageType =
   | "web"
   | "react-native"
   | "capacitor"
-  | "expo-secure-storage";
+  | "expo-secure-storage"
+  | "custom";
 
 export interface LoginData {
   mfa?: boolean;
