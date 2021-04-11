@@ -24,6 +24,7 @@ services:
     environment:
       PORT: "3000"
       HOST: "0.0.0.0"
+      NODE_ENV: "TEST"
     env_file: .env
     volumes:
       - ./custom:/app/custom
