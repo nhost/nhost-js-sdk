@@ -1,5 +1,5 @@
 import "jest-extended";
-import { auth } from "./test/test-utils";
+import { nhost, auth } from "./test/test-utils";
 
 jest.useFakeTimers("modern");
 
@@ -13,6 +13,28 @@ it("should register second user", async () => {
   await expect(
     auth.register({ email: "user-2@nhost.io", password: "password-2" })
   ).toResolve();
+});
+
+it("should register a passwordless user when passwordless mode is enabled", async () => {
+  await nhost.withEnv({
+    ENABLE_PASSWORDLESS: 'true',
+  }, async () => {
+    await expect(
+      auth.register({ email: "passwordless-user@nhost.io" })
+    ).toResolve();
+  }, {
+    ENABLE_PASSWORDLESS: 'false'
+  })
+});
+
+it("should not register a passwordless user when passwordless mode is disabled", async () => {
+  await nhost.withEnv({
+    ENABLE_PASSWORDLESS: 'false',
+  }, async () => {
+    await expect(
+      auth.register({ email: "passwordless-user@nhost.io" })
+    ).toReject();
+  })
 });
 
 it("should not be able to register same user twice", async () => {
@@ -53,7 +75,7 @@ it("should not be able to login with wrong password", async () => {
   ).toReject();
 });
 
-it("should not be able to login with wrong password", async () => {
+it("should be able to login with correct password", async () => {
   await expect(
     auth.login({ email: "user-1@nhost.io", password: "password-1" })
   ).toResolve();
@@ -93,6 +115,28 @@ it("should not be able to retreive JWT token after logout", () => {
 
 it("should not be able to retreive JWT claim after logout", () => {
   expect(auth.getClaim("x-hasura-user-id")).toBeNull();
+});
+
+it("should be able to login without a password when passwordless mode is enabled", async () => {
+  await nhost.withEnv({
+    ENABLE_PASSWORDLESS: 'true'
+  }, async () => {
+    await expect(
+      auth.login({ email: "passwordless-user@nhost.io" })
+    ).toResolve();
+  }, {
+    ENABLE_PASSWORDLESS: 'false'
+  })
+});
+
+it("should not be able to login without a password when passwordless mode is disabled", async () => {
+  await nhost.withEnv({
+    ENABLE_PASSWORDLESS: 'false'
+  }, async () => {
+    await expect(
+      auth.login({ email: "passwordless-user@nhost.io" })
+    ).toReject();
+  })
 });
 
 describe("testing onAuthStateChanged", () => {
