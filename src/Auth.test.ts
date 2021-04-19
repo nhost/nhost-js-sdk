@@ -15,24 +15,24 @@ it("should register second user", async () => {
   ).toResolve();
 });
 
-it("should register a passwordless user when passwordless mode is enabled", async () => {
+it("should register a magic link user when magic link mode is enabled", async () => {
   await nhost.withEnv({
-    ENABLE_PASSWORDLESS: 'true',
+    ENABLE_MAGIC_LINK: 'true',
   }, async () => {
     await expect(
-      auth.register({ email: "passwordless-user@nhost.io" })
+      auth.register({ email: "magic-link-user@nhost.io" })
     ).toResolve();
   }, {
-    ENABLE_PASSWORDLESS: 'false'
+    ENABLE_MAGIC_LINK: 'false'
   })
 });
 
-it("should not register a passwordless user when passwordless mode is disabled", async () => {
+it("should not register a magic link user when magic link mode is disabled", async () => {
   await nhost.withEnv({
-    ENABLE_PASSWORDLESS: 'false',
+    ENABLE_MAGIC_LINK: 'false',
   }, async () => {
     await expect(
-      auth.register({ email: "passwordless-user@nhost.io" })
+      auth.register({ email: "magic-link-user@nhost.io" })
     ).toReject();
   })
 });
@@ -117,24 +117,24 @@ it("should not be able to retreive JWT claim after logout", () => {
   expect(auth.getClaim("x-hasura-user-id")).toBeNull();
 });
 
-it("should be able to login without a password when passwordless mode is enabled", async () => {
+it("should be able to login without a password when magic link mode is enabled", async () => {
   await nhost.withEnv({
-    ENABLE_PASSWORDLESS: 'true'
+    ENABLE_MAGIC_LINK: 'true'
   }, async () => {
     await expect(
-      auth.login({ email: "passwordless-user@nhost.io" })
+      auth.login({ email: "magic-link-user@nhost.io" })
     ).toResolve();
   }, {
-    ENABLE_PASSWORDLESS: 'false'
+    ENABLE_MAGIC_LINK: 'false'
   })
 });
 
-it("should not be able to login without a password when passwordless mode is disabled", async () => {
+it("should not be able to login without a password when magic link mode is disabled", async () => {
   await nhost.withEnv({
-    ENABLE_PASSWORDLESS: 'false'
+    ENABLE_MAGIC_LINK: 'false'
   }, async () => {
     await expect(
-      auth.login({ email: "passwordless-user@nhost.io" })
+      auth.login({ email: "magic-link-user@nhost.io" })
     ).toReject();
   })
 });

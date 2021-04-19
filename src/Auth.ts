@@ -173,7 +173,7 @@ export default class Auth {
       return { session: null, user: null, mfa: { ticket: res.data.ticket } };
     }
 
-    if ('passwordless' in res.data) {
+    if ('magicLink' in res.data) {
       return { session: null, user: null };
     }
 
