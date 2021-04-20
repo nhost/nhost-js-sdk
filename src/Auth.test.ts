@@ -129,6 +129,18 @@ it("should be able to login without a password when magic link mode is enabled",
   })
 });
 
+it("should not be able to login with an empty string password when magic link mode is enabled", async () => {
+  await nhost.withEnv({
+    ENABLE_MAGIC_LINK: 'true'
+  }, async () => {
+    await expect(
+      auth.login({ email: "magic-link-user@nhost.io", password: '' })
+    ).toReject();
+  }, {
+    ENABLE_MAGIC_LINK: 'false'
+  })
+});
+
 it("should not be able to login without a password when magic link mode is disabled", async () => {
   await nhost.withEnv({
     ENABLE_MAGIC_LINK: 'false'
