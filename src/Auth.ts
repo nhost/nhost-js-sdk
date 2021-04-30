@@ -151,6 +151,7 @@ export default class Auth {
     mfa?: {
       ticket: string;
     };
+    magicLink?: true;
   }> {
     if (provider) {
       window.location.href = `${this.baseURL}/auth/providers/${provider}`;
@@ -174,7 +175,7 @@ export default class Auth {
     }
 
     if ('magicLink' in res.data) {
-      return { session: null, user: null };
+      return { session: null, user: null, magicLink: true };
     }
 
     this._setSession(res.data);
