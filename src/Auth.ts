@@ -113,9 +113,9 @@ export default class Auth {
     const registerOptions =
       defaultRole || allowedRoles
         ? {
-            default_role: defaultRole,
-            allowed_roles: allowedRoles,
-          }
+          default_role: defaultRole,
+          allowed_roles: allowedRoles,
+        }
         : undefined;
 
     let res;
@@ -151,6 +151,7 @@ export default class Auth {
     mfa?: {
       ticket: string;
     };
+    magicLink?: true;
   }> {
     if (provider) {
       window.location.href = `${this.baseURL}/auth/providers/${provider}`;
@@ -171,6 +172,10 @@ export default class Auth {
 
     if ("mfa" in res.data) {
       return { session: null, user: null, mfa: { ticket: res.data.ticket } };
+    }
+
+    if ('magicLink' in res.data) {
+      return { session: null, user: null, magicLink: true };
     }
 
     this._setSession(res.data);
@@ -215,7 +220,7 @@ export default class Auth {
     const unsubscribe = () => {
       try {
         // replace onTokenChanged with empty function
-        this.authChangedFunctions[tokenChangedFunctionIndex] = () => {};
+        this.authChangedFunctions[tokenChangedFunctionIndex] = () => { };
       } catch (err) {
         console.warn(
           "Unable to unsubscribe onTokenChanged function. Maybe you already did?"
@@ -235,7 +240,7 @@ export default class Auth {
     const unsubscribe = () => {
       try {
         // replace onAuthStateChanged with empty function
-        this.authChangedFunctions[authStateChangedFunctionIndex] = () => {};
+        this.authChangedFunctions[authStateChangedFunctionIndex] = () => { };
       } catch (err) {
         console.warn(
           "Unable to unsubscribe onAuthStateChanged function. Maybe you already did?"
@@ -255,7 +260,7 @@ export default class Auth {
     const isAuthenticated = this.isAuthenticated();
 
     return new Promise(resolve => {
-      if(isAuthenticated !== null) resolve(isAuthenticated);
+      if (isAuthenticated !== null) resolve(isAuthenticated);
       else {
         const unsubscribe = this.onAuthStateChanged((isAuthenticated) => {
           resolve(isAuthenticated);

@@ -4,8 +4,8 @@ import UserSession from "./UserSession";
 import * as types from "./types";
 
 export default class NhostClient {
-  private baseURL: string;
-  private useCookies: boolean;
+  protected baseURL: string;
+  protected useCookies: boolean;
   private refreshIntervalTime: number | null;
   private clientStorage: types.ClientStorage;
   private clientStorageType: string;

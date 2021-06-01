@@ -19,6 +19,7 @@ export default async (): Promise<void> => {
   await fs.removeSync(`${test_path}/db_data`);
 
   // start docker compose
+  await compose.buildAll({ cwd: test_path, log: true, commandOptions: ['--no-cache'] });
   await compose.upAll({ cwd: test_path, log: true });
 
   // wait until HBP and Hasura is up
