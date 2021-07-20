@@ -26,7 +26,8 @@ export default class NhostClient {
     this.autoLogin = config.autoLogin ?? true;
 
     this.session = new UserSession();
-    this.refreshIntervalTime = config.refreshIntervalTime || null; // 10 minutes (600 seconds)
+    // Default JWTExpiresIn is 15 minutes (900000 miliseconds)
+    this.refreshIntervalTime = config.refreshIntervalTime || null;
 
     this.clientStorage = this.ssr
       ? {}

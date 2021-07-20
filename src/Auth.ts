@@ -548,7 +548,7 @@ export default class Auth {
     const refreshToken =
       initRefreshToken || (await this._getItem("nhostRefreshToken"));
 
-    if (!refreshToken) {
+    if (!this.useCookies && !refreshToken) {
       // place at end of call-stack to let frontend get `null` first (to match SSR)
       setTimeout(() => {
         this._clearSession();
