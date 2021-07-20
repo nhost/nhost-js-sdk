@@ -276,8 +276,8 @@ export default class Auth {
     return this.currentSession.getClaim(claim);
   }
 
-  public async refreshSession(): Promise<void> {
-    return await this._refreshToken();
+  public async refreshSession(initRefreshToken?: string | null): Promise<void> {
+    return await this._refreshToken(initRefreshToken);
   }
 
   public async activate(ticket: string): Promise<void> {
