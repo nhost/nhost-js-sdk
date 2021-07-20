@@ -276,8 +276,8 @@ export default class Auth {
     return this.currentSession.getClaim(claim);
   }
 
-  public async refreshSession(): Promise<void> {
-    return await this._refreshToken();
+  public async refreshSession(initRefreshToken?: string | null): Promise<void> {
+    return await this._refreshToken(initRefreshToken);
   }
 
   public async activate(ticket: string): Promise<void> {
@@ -548,7 +548,7 @@ export default class Auth {
     const refreshToken =
       initRefreshToken || (await this._getItem("nhostRefreshToken"));
 
-    if (!refreshToken) {
+    if (!this.useCookies && !refreshToken) {
       // place at end of call-stack to let frontend get `null` first (to match SSR)
       setTimeout(() => {
         this._clearSession();
