@@ -1,7 +1,7 @@
-import axios, { AxiosInstance } from "axios";
-import queryString from "query-string";
-import * as types from "./types";
-import UserSession from "./UserSession";
+import axios, { AxiosInstance } from 'axios';
+import queryString from 'query-string';
+import * as types from './types';
+import UserSession from './UserSession';
 
 export type AuthChangedFunction = (isAuthenticated: boolean) => void;
 
@@ -70,10 +70,10 @@ export default class Auth {
       try {
         const parsed = queryString.parse(window.location.search);
         refreshToken =
-          "refresh_token" in parsed ? (parsed.refresh_token as string) : null;
+          'refresh_token' in parsed ? (parsed.refresh_token as string) : null;
 
         if (refreshToken) {
-          let newURL = this._removeParam("refresh_token", window.location.href);
+          let newURL = this._removeParam('refresh_token', window.location.href);
           try {
             window.history.pushState({}, document.title, newURL);
           } catch {
@@ -92,7 +92,7 @@ export default class Auth {
     if (autoLogin) {
       this._autoLogin(refreshToken);
     } else if (refreshToken) {
-      this._setItem("nhostRefreshToken", refreshToken);
+      this._setItem('nhostRefreshToken', refreshToken);
     }
   }
 
@@ -120,7 +120,7 @@ export default class Auth {
 
     let res;
     try {
-      res = await this.httpClient.post("/register", {
+      res = await this.httpClient.post('/register', {
         email,
         password,
         cookie: this.useCookies,
@@ -160,7 +160,7 @@ export default class Auth {
 
     let res;
     try {
-      res = await this.httpClient.post("/login", {
+      res = await this.httpClient.post('/login', {
         email,
         password,
         cookie: this.useCookies,
@@ -170,11 +170,11 @@ export default class Auth {
       throw error;
     }
 
-    if ("mfa" in res.data) {
+    if ('mfa' in res.data) {
       return { session: null, user: null, mfa: { ticket: res.data.ticket } };
     }
 
-    if ("magicLink" in res.data) {
+    if ('magicLink' in res.data) {
       return { session: null, user: null, magicLink: true };
     }
 
@@ -189,13 +189,13 @@ export default class Auth {
   }> {
     try {
       await this.httpClient.post(
-        "/logout",
+        '/logout',
         {
           all,
         },
         {
           params: {
-            refresh_token: await this._getItem("nhostRefreshToken"),
+            refresh_token: await this._getItem('nhostRefreshToken'),
           },
         }
       );
@@ -221,7 +221,7 @@ export default class Auth {
         this.tokenChangedFunctions[tokenChangedFunctionIndex] = () => {};
       } catch (err) {
         console.warn(
-          "Unable to unsubscribe onTokenChanged function. Maybe you already did?"
+          'Unable to unsubscribe onTokenChanged function. Maybe you already did?'
         );
       }
     };
@@ -241,7 +241,7 @@ export default class Auth {
         this.authChangedFunctions[authStateChangedFunctionIndex] = () => {};
       } catch (err) {
         console.warn(
-          "Unable to unsubscribe onAuthStateChanged function. Maybe you already did?"
+          'Unable to unsubscribe onAuthStateChanged function. Maybe you already did?'
         );
       }
     };
@@ -286,7 +286,7 @@ export default class Auth {
 
   public async changeEmail(new_email: string): Promise<void> {
     await this.httpClient.post(
-      "/change-email",
+      '/change-email',
       {
         new_email,
       },
@@ -298,7 +298,7 @@ export default class Auth {
 
   public async requestEmailChange(new_email: string): Promise<void> {
     await this.httpClient.post(
-      "/change-email/request",
+      '/change-email/request',
       {
         new_email,
       },
@@ -309,7 +309,7 @@ export default class Auth {
   }
 
   public async confirmEmailChange(ticket: string): Promise<void> {
-    await this.httpClient.post("/change-email/change", {
+    await this.httpClient.post('/change-email/change', {
       ticket,
     });
   }
@@ -319,7 +319,7 @@ export default class Auth {
     newPassword: string
   ): Promise<void> {
     await this.httpClient.post(
-      "/change-password",
+      '/change-password',
       {
         old_password: oldPassword,
         new_password: newPassword,
@@ -331,7 +331,7 @@ export default class Auth {
   }
 
   public async requestPasswordChange(email: string): Promise<void> {
-    await this.httpClient.post("/change-password/request", {
+    await this.httpClient.post('/change-password/request', {
       email,
     });
   }
@@ -340,7 +340,7 @@ export default class Auth {
     newPassword: string,
     ticket: string
   ): Promise<void> {
-    await this.httpClient.post("/change-password/change", {
+    await this.httpClient.post('/change-password/change', {
       new_password: newPassword,
       ticket,
     });
@@ -348,7 +348,7 @@ export default class Auth {
 
   public async MFAGenerate(): Promise<void> {
     const res = await this.httpClient.post(
-      "/mfa/generate",
+      '/mfa/generate',
       {},
       {
         headers: this._generateHeaders(),
@@ -359,7 +359,7 @@ export default class Auth {
 
   public async MFAEnable(code: string): Promise<void> {
     await this.httpClient.post(
-      "/mfa/enable",
+      '/mfa/enable',
       {
         code,
       },
@@ -371,7 +371,7 @@ export default class Auth {
 
   public async MFADisable(code: string): Promise<void> {
     await this.httpClient.post(
-      "/mfa/disable",
+      '/mfa/disable',
       {
         code,
       },
@@ -388,7 +388,7 @@ export default class Auth {
     session: types.Session;
     user: types.User;
   }> {
-    const res = await this.httpClient.post("/mfa/totp", {
+    const res = await this.httpClient.post('/mfa/totp', {
       code,
       ticket,
       cookie: this.useCookies,
@@ -400,57 +400,57 @@ export default class Auth {
   }
 
   private _removeParam(key: string, sourceURL: string) {
-    var rtn = sourceURL.split("?")[0],
+    var rtn = sourceURL.split('?')[0],
       param,
       params_arr = [],
       queryString =
-        sourceURL.indexOf("?") !== -1 ? sourceURL.split("?")[1] : "";
-    if (queryString !== "") {
-      params_arr = queryString.split("&");
+        sourceURL.indexOf('?') !== -1 ? sourceURL.split('?')[1] : '';
+    if (queryString !== '') {
+      params_arr = queryString.split('&');
       for (var i = params_arr.length - 1; i >= 0; i -= 1) {
-        param = params_arr[i].split("=")[0];
+        param = params_arr[i].split('=')[0];
         if (param === key) {
           params_arr.splice(i, 1);
         }
       }
       if (params_arr.length > 0) {
-        rtn = rtn + "?" + params_arr.join("&");
+        rtn = rtn + '?' + params_arr.join('&');
       }
     }
     return rtn;
   }
 
   private async _setItem(key: string, value: string): Promise<void> {
-    if (typeof value !== "string") {
+    if (typeof value !== 'string') {
       console.error(`value is not of type "string"`);
       return;
     }
 
     switch (this.clientStorageType) {
-      case "web":
-        if (typeof this.clientStorage.setItem !== "function") {
+      case 'web':
+        if (typeof this.clientStorage.setItem !== 'function') {
           console.error(`this.clientStorage.setItem is not a function`);
           break;
         }
         this.clientStorage.setItem(key, value);
         break;
-      case "custom":
-      case "react-native":
-        if (typeof this.clientStorage.setItem !== "function") {
+      case 'custom':
+      case 'react-native':
+        if (typeof this.clientStorage.setItem !== 'function') {
           console.error(`this.clientStorage.setItem is not a function`);
           break;
         }
         await this.clientStorage.setItem(key, value);
         break;
-      case "capacitor":
-        if (typeof this.clientStorage.set !== "function") {
+      case 'capacitor':
+        if (typeof this.clientStorage.set !== 'function') {
           console.error(`this.clientStorage.set is not a function`);
           break;
         }
         await this.clientStorage.set({ key, value });
         break;
-      case "expo-secure-storage":
-        if (typeof this.clientStorage.setItemAsync !== "function") {
+      case 'expo-secure-storage':
+        if (typeof this.clientStorage.setItemAsync !== 'function') {
           console.error(`this.clientStorage.setItemAsync is not a function`);
           break;
         }
@@ -463,28 +463,28 @@ export default class Auth {
 
   private async _getItem(key: string): Promise<unknown> {
     switch (this.clientStorageType) {
-      case "web":
-        if (typeof this.clientStorage.getItem !== "function") {
+      case 'web':
+        if (typeof this.clientStorage.getItem !== 'function') {
           console.error(`this.clientStorage.getItem is not a function`);
           break;
         }
         return this.clientStorage.getItem(key);
-      case "custom":
-      case "react-native":
-        if (typeof this.clientStorage.getItem !== "function") {
+      case 'custom':
+      case 'react-native':
+        if (typeof this.clientStorage.getItem !== 'function') {
           console.error(`this.clientStorage.getItem is not a function`);
           break;
         }
         return await this.clientStorage.getItem(key);
-      case "capacitor":
-        if (typeof this.clientStorage.get !== "function") {
+      case 'capacitor':
+        if (typeof this.clientStorage.get !== 'function') {
           console.error(`this.clientStorage.get is not a function`);
           break;
         }
         const res = await this.clientStorage.get({ key });
         return res.value;
-      case "expo-secure-storage":
-        if (typeof this.clientStorage.getItemAsync !== "function") {
+      case 'expo-secure-storage':
+        if (typeof this.clientStorage.getItemAsync !== 'function') {
           console.error(`this.clientStorage.getItemAsync is not a function`);
           break;
         }
@@ -496,28 +496,28 @@ export default class Auth {
 
   private async _removeItem(key: string): Promise<void> {
     switch (this.clientStorageType) {
-      case "web":
-        if (typeof this.clientStorage.removeItem !== "function") {
+      case 'web':
+        if (typeof this.clientStorage.removeItem !== 'function') {
           console.error(`this.clientStorage.removeItem is not a function`);
           break;
         }
         return this.clientStorage.removeItem(key);
-      case "custom":
-      case "react-native":
-        if (typeof this.clientStorage.removeItem !== "function") {
+      case 'custom':
+      case 'react-native':
+        if (typeof this.clientStorage.removeItem !== 'function') {
           console.error(`this.clientStorage.removeItem is not a function`);
           break;
         }
         return await this.clientStorage.removeItem(key);
-      case "capacitor":
-        if (typeof this.clientStorage.remove !== "function") {
+      case 'capacitor':
+        if (typeof this.clientStorage.remove !== 'function') {
           console.error(`this.clientStorage.remove is not a function`);
           break;
         }
         await this.clientStorage.remove({ key });
         break;
-      case "expo-secure-storage":
-        if (typeof this.clientStorage.deleteItemAsync !== "function") {
+      case 'expo-secure-storage':
+        if (typeof this.clientStorage.deleteItemAsync !== 'function') {
           console.error(`this.clientStorage.deleteItemAsync is not a function`);
           break;
         }
@@ -546,7 +546,7 @@ export default class Auth {
 
   private async _refreshToken(initRefreshToken?: string | null): Promise<void> {
     const refreshToken =
-      initRefreshToken || (await this._getItem("nhostRefreshToken"));
+      initRefreshToken || (await this._getItem('nhostRefreshToken'));
 
     if (!this.useCookies && !refreshToken) {
       // place at end of call-stack to let frontend get `null` first (to match SSR)
@@ -569,7 +569,7 @@ export default class Auth {
       this.refreshTokenLock = true;
 
       // make refresh token request
-      res = await this.httpClient.get("/token/refresh", {
+      res = await this.httpClient.get('/token/refresh', {
         params: {
           refresh_token: refreshToken,
         },
@@ -619,7 +619,7 @@ export default class Auth {
     clearInterval(this.refreshSleepCheckInterval);
 
     this.currentSession.clearSession();
-    this._removeItem("nhostRefreshToken");
+    this._removeItem('nhostRefreshToken');
 
     this.loading = false;
     this.authStateChanged(false);
@@ -631,7 +631,7 @@ export default class Auth {
     this.currentUser = session.user;
 
     if (!this.useCookies && session.refresh_token) {
-      await this._setItem("nhostRefreshToken", session.refresh_token);
+      await this._setItem('nhostRefreshToken', session.refresh_token);
     }
 
     if (!previouslyAuthenticated) {

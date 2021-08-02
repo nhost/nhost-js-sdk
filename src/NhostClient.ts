@@ -1,7 +1,7 @@
-import NhostAuth from "./Auth";
-import NhostStorage from "./Storage";
-import UserSession from "./UserSession";
-import * as types from "./types";
+import NhostAuth from './Auth';
+import NhostStorage from './Storage';
+import UserSession from './UserSession';
+import * as types from './types';
 
 export default class NhostClient {
   protected baseURL: string;
@@ -18,10 +18,10 @@ export default class NhostClient {
 
   constructor(config: types.UserConfig) {
     if (!config.baseURL)
-      throw "Please specify a baseURL. More information at https://docs.nhost.io/libraries/nhost-js-sdk#setup.";
+      throw 'Please specify a baseURL. More information at https://docs.nhost.io/libraries/nhost-js-sdk#setup.';
 
     this.baseURL = config.baseURL;
-    this.ssr = config.ssr ?? typeof window === "undefined";
+    this.ssr = config.ssr ?? typeof window === 'undefined';
     this.useCookies = config.useCookies ?? false;
     this.autoLogin = config.autoLogin ?? true;
 
@@ -35,7 +35,7 @@ export default class NhostClient {
 
     this.clientStorageType = config.clientStorageType
       ? config.clientStorageType
-      : "web";
+      : 'web';
 
     this.auth = new NhostAuth(
       {

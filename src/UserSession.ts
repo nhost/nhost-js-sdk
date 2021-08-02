@@ -1,5 +1,5 @@
-import jwt_decode from "jwt-decode";
-import { Session, JWTClaims, JWTHasuraClaims } from "./types";
+import jwt_decode from 'jwt-decode';
+import { Session, JWTClaims, JWTHasuraClaims } from './types';
 
 export default class UserSession {
   private session: Session | null;
@@ -14,7 +14,7 @@ export default class UserSession {
     this.session = session;
 
     const jwtTokenDecoded: JWTClaims = jwt_decode(session.jwt_token);
-    this.claims = jwtTokenDecoded["https://hasura.io/jwt/claims"];
+    this.claims = jwtTokenDecoded['https://hasura.io/jwt/claims'];
   }
 
   public clearSession() {

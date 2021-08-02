@@ -45,11 +45,11 @@ export interface ClientStorage {
 
 // supported client storage types
 export type ClientStorageType =
-  | "web"
-  | "react-native"
-  | "capacitor"
-  | "expo-secure-storage"
-  | "custom";
+  | 'web'
+  | 'react-native'
+  | 'capacitor'
+  | 'expo-secure-storage'
+  | 'custom';
 
 export interface LoginData {
   mfa?: boolean;
@@ -61,14 +61,14 @@ export interface Headers {
 }
 
 export type Provider =
-  | "apple"
-  | "facebook"
-  | "github"
-  | "google"
-  | "linkedin"
-  | "spotify"
-  | "twitter"
-  | "windowslive";
+  | 'apple'
+  | 'facebook'
+  | 'github'
+  | 'google'
+  | 'linkedin'
+  | 'spotify'
+  | 'twitter'
+  | 'windowslive';
 
 export interface UserCredentials {
   email?: string;
@@ -95,14 +95,14 @@ export interface User {
 }
 export interface JWTHasuraClaims {
   [claim: string]: string | string[];
-  "x-hasura-allowed-roles" : string[];
-  "x-hasura-default-role": string;
-  "x-hasura-user-id": string;
+  'x-hasura-allowed-roles': string[];
+  'x-hasura-default-role': string;
+  'x-hasura-user-id': string;
 }
 
 // https://hasura.io/docs/1.0/graphql/core/auth/authentication/jwt.html#the-spec
 export interface JWTClaims {
   sub?: string;
   iat?: number;
-  "https://hasura.io/jwt/claims": JWTHasuraClaims;
+  'https://hasura.io/jwt/claims': JWTHasuraClaims;
 }

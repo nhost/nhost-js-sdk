@@ -1,30 +1,30 @@
 export type StringFormat = string;
 export const StringFormat = {
-  RAW: "raw",
-  BASE64: "base64",
-  BASE64URL: "base64url",
-  DATA_URL: "data_url",
+  RAW: 'raw',
+  BASE64: 'base64',
+  BASE64URL: 'base64url',
+  DATA_URL: 'data_url',
 };
 
 export function base64Bytes(format: StringFormat, value: string): Uint8Array {
   switch (format) {
     case StringFormat.BASE64: {
-      const hasMinus = value.indexOf("-") !== -1;
-      const hasUnder = value.indexOf("_") !== -1;
+      const hasMinus = value.indexOf('-') !== -1;
+      const hasUnder = value.indexOf('_') !== -1;
       if (hasMinus || hasUnder) {
-        const invalidChar = hasMinus ? "-" : "_";
+        const invalidChar = hasMinus ? '-' : '_';
         throw `Invalid character '${invalidChar}' found: is it base64url encoded?`;
       }
       break;
     }
     case StringFormat.BASE64URL: {
-      const hasPlus = value.indexOf("+") !== -1;
-      const hasSlash = value.indexOf("/") !== -1;
+      const hasPlus = value.indexOf('+') !== -1;
+      const hasSlash = value.indexOf('/') !== -1;
       if (hasPlus || hasSlash) {
-        const invalidChar = hasPlus ? "+" : "/";
+        const invalidChar = hasPlus ? '+' : '/';
         throw `Invalid character '${invalidChar}' found: is it base64url encoded?`;
       }
-      value = value.replace(/-/g, "+").replace(/_/g, "/");
+      value = value.replace(/-/g, '+').replace(/_/g, '/');
       break;
     }
     default:
@@ -90,7 +90,7 @@ export function percentEncodedBytes(value: string): Uint8Array {
   try {
     decoded = decodeURIComponent(value);
   } catch (e) {
-    throw "Malformed data URL.";
+    throw 'Malformed data URL.';
   }
   return utf8Bytes(decoded);
 }
