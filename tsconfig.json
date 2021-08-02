@@ -1,18 +1,8 @@
 {
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src/**/*.test.ts",
-    "src/test"
-  ],
+  "include": ["src", "test"],
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts", "test"],
   "compilerOptions": {
-    "lib": [
-      "es2020",
-      "dom"
-    ],
+    "lib": ["es2020", "dom"],
     "esModuleInterop": true,
     "declaration": true,
     "strict": true,
