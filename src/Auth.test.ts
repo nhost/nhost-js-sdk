@@ -18,7 +18,7 @@ it('should register second user', async () => {
 it('should register a magic link user when magic link mode is enabled', async () => {
   await nhost.withEnv(
     {
-      ENABLE_MAGIC_LINK: 'true',
+      MAGIC_LINK_ENABLED: 'true',
     },
     async () => {
       await expect(
@@ -26,7 +26,7 @@ it('should register a magic link user when magic link mode is enabled', async ()
       ).toResolve();
     },
     {
-      ENABLE_MAGIC_LINK: 'false',
+      MAGIC_LINK_ENABLED: 'false',
     }
   );
 });
@@ -34,7 +34,7 @@ it('should register a magic link user when magic link mode is enabled', async ()
 it('should not register a magic link user when magic link mode is disabled', async () => {
   await nhost.withEnv(
     {
-      ENABLE_MAGIC_LINK: 'false',
+      MAGIC_LINK_ENABLED: 'false',
     },
     async () => {
       await expect(
@@ -126,7 +126,7 @@ it('should not be able to retreive JWT claim after logout', () => {
 it('should be able to login without a password when magic link mode is enabled', async () => {
   await nhost.withEnv(
     {
-      ENABLE_MAGIC_LINK: 'true',
+      MAGIC_LINK_ENABLED: 'true',
     },
     async () => {
       await expect(
@@ -134,7 +134,7 @@ it('should be able to login without a password when magic link mode is enabled',
       ).toResolve();
     },
     {
-      ENABLE_MAGIC_LINK: 'false',
+      MAGIC_LINK_ENABLED: 'false',
     }
   );
 });
@@ -142,7 +142,7 @@ it('should be able to login without a password when magic link mode is enabled',
 it('should not be able to login with an empty string password when magic link mode is enabled', async () => {
   await nhost.withEnv(
     {
-      ENABLE_MAGIC_LINK: 'true',
+      MAGIC_LINK_ENABLED: 'true',
     },
     async () => {
       await expect(
@@ -150,7 +150,7 @@ it('should not be able to login with an empty string password when magic link mo
       ).toReject();
     },
     {
-      ENABLE_MAGIC_LINK: 'false',
+      MAGIC_LINK_ENABLED: 'false',
     }
   );
 });
@@ -158,7 +158,7 @@ it('should not be able to login with an empty string password when magic link mo
 it('should not be able to login without a password when magic link mode is disabled', async () => {
   await nhost.withEnv(
     {
-      ENABLE_MAGIC_LINK: 'false',
+      MAGIC_LINK_ENABLED: 'false',
     },
     async () => {
       await expect(
