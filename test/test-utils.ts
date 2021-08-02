@@ -1,8 +1,8 @@
-import axios from "axios";
-import { NhostClient } from "../index";
+import axios from 'axios';
+import { NhostClient } from '../src/index';
 
 const config = {
-  baseURL: "http://localhost:3000",
+  baseURL: 'http://localhost:3000',
 };
 
 class TestNhostClient extends NhostClient {

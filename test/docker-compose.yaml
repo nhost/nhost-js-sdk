@@ -1,4 +1,4 @@
-version: "3.6"
+version: '3.6'
 services:
   postgres:
     image: postgres:12
@@ -9,24 +9,21 @@ services:
   graphql-engine:
     image: hasura/graphql-engine:v1.3.3.cli-migrations
     depends_on:
-      - "postgres"
+      - 'postgres'
     restart: always
     env_file: .env
     ports:
-      - "8080:8080"
+      - '8080:8080'
     volumes:
       - ./migrations:/hasura-migrations
   hasura-backend-plus:
-    # image: nhost/hasura-backend-plus:v2.2.4
-    build:
-      context: ../../../hasura-backend-plus
-      dockerfile: Dockerfile.dev
+    image: nhost/hasura-backend-plus:latest
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
-      PORT: "3000"
-      HOST: "0.0.0.0"
-      NODE_ENV: "TEST"
+      PORT: '3000'
+      HOST: '0.0.0.0'
+      NODE_ENV: 'TEST'
     env_file: .env
     volumes:
       - ./custom:/app/custom
@@ -34,7 +31,7 @@ services:
     image: minio/minio
     restart: always
     ports:
-      - "9000:9000"
+      - '9000:9000'
     env_file: .env
     entrypoint: sh
     volumes:

@@ -1,5 +1,5 @@
 import 'jest-extended';
-import { nhost, auth } from './test/test-utils';
+import { nhost, auth } from '../test/test-utils';
 
 jest.useFakeTimers('modern');
 

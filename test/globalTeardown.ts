@@ -1,8 +1,8 @@
 // const compose = require("docker-compose");
 // const path = require("path");
 
-import * as compose from "docker-compose";
-import path from "path";
+import * as compose from 'docker-compose';
+import path from 'path';
 
 module.exports = async () => {
   await compose.down({
@@ -10,5 +10,5 @@ module.exports = async () => {
     log: true,
   });
 
-  console.log("global TEARDOWN");
+  console.log('global TEARDOWN');
 };
