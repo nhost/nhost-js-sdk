@@ -564,6 +564,8 @@ export default class Auth {
       if (this.refreshTokenLock) {
         return;
       }
+
+      // lock refresh token lock
       this.refreshTokenLock = true;
 
       // make refresh token request
@@ -573,18 +575,26 @@ export default class Auth {
         },
       });
     } catch (error) {
+      // release refresh token lock
+      this.refreshTokenLock = false;
+
       if (error.response?.status === 401) {
+        // only trigger logout if 401 unauthorized
         await this.logout();
         return;
       } else {
-        return; // silent fail
+        // otherwise, silently fail
+        return;
       }
-    } finally {
-      // release lock
-      this.refreshTokenLock = false;
     }
 
+    // set new session data
     this._setSession(res.data);
+
+    // release refresh token lock after session has been set
+    this.refreshTokenLock = false;
+
+    //
     this.tokenChanged();
   }
 
