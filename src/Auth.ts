@@ -581,11 +581,10 @@ export default class Auth {
       if (error.response?.status === 401) {
         // only trigger logout if 401 unauthorized
         await this.logout();
-        return;
-      } else {
-        // otherwise, silently fail
-        return;
       }
+
+      // otherwise, silently fail
+      return;
     }
 
     // set new session data
