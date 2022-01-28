@@ -1,6 +1,6 @@
 ## Deprecation notice
 
-This repository is the source code of the Nhost V1 SDK and is **deprecated**. New SDK version can be found on the main [nhost-js repository](https://github.com/nhost/nhost-js).
+This repository is the source code of the Nhost V1 SDK and is **deprecated** and not actively maintained. New SDK version can be found on the main [nhost-js repository](https://github.com/nhost/nhost-js).
 
 # Nhost JS SDK
 
